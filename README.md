@@ -17,7 +17,6 @@ Quality checks for WiredTiger PRs.
     - Repo::Contents: Read only
     - Repo::Metadata: Read only 
     - Repo::Pull requests: Read & write
-    - Repo::Metadata: Read only
     - Organisation::Members: Read only
 
 ## Setup

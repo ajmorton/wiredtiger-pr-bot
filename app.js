@@ -5,6 +5,10 @@ import { Octokit, App } from 'octokit'
 import { createNodeMiddleware } from '@octokit/webhooks'
 
 import { register_hooks_logging } from './src/print_webhooks.js'
+import { register_pr_title_check_hooks } from './src/pr_title_check.js'
+
+// FIXME - Update code to camelCase
+// FIXME - clean up all this async leakage
 
 // Load environment variables from .env file
 dotenv.config()
@@ -40,6 +44,7 @@ app.octokit.log.debug(`Authenticated as '${data.name}'`)
 // Register each of the PR checks //
 ////////////////////////////////////
 register_hooks_logging(app)
+register_pr_title_check_hooks(app)
 
 
 // Optional: Handle errors

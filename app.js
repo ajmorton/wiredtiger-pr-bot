@@ -7,6 +7,7 @@ import { createNodeMiddleware } from '@octokit/webhooks'
 import { register_hooks_logging } from './src/print_webhooks.js'
 import { register_pr_title_check_hooks } from './src/pr_title_check.js'
 import { register_external_contributor_check_hooks} from './src/external_contributor_check.js'
+import { register_assign_developers_hooks} from './src/assign_developers.js'
 
 // FIXME - Update code to camelCase
 // FIXME - clean up all this async leakage
@@ -41,6 +42,7 @@ const app = new App({
 register_hooks_logging(app)
 register_pr_title_check_hooks(app)
 register_external_contributor_check_hooks(app)
+register_assign_developers_hooks(app)
 
 // Optional: Handle errors
 app.webhooks.onError((error) => {

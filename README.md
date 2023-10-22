@@ -1,20 +1,29 @@
-# Sample GitHub App
+# wt-github-pr-checker
 
-This sample app showcases how webhooks can be used with a GitHub App's installation token to create a bot that responds to issues. Code uses [octokit.js](https://github.com/octokit/octokit.js).
+Quality checks for WiredTiger PRs.
+- When external users (those not in the wiredtiger organisation) open a PR post a welcome message with instructions on signing the collaborators agreement, and add a check that reminds reviewers to verify the agreement has been signed
+- Validate that the PR title begins with a WT ticket required by our automation tasks
 
 ## Requirements
 
 - Node.js 12 or higher
-- A GitHub App subscribed to **Pull Request** events and with the following permissions:
-  - Pull requests: Read & write
-  - Metadata: Read-only
-- (For local development) A tunnel to expose your local server to the internet (e.g. [smee](https://smee.io/), [ngrok](https://ngrok.com/) or [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/tunnel-guide/local/))
-- Your GitHub App Webhook must be configured to receive events at a URL that is accessible from the internet.
+- A GitHub App with:
+  - Subscriptions to the following events:
+    - Pull Request
+    - Check Run
+    - Check Suite
+  - The following permissions:
+    - Repo::Checks: Read & write
+    - Repo::Contents: Read only
+    - Repo::Metadata: Read only 
+    - Repo::Pull requests: Read & write
+    - Repo::Metadata: Read only
+    - Organisation::Members: Read only
 
 ## Setup
 
 1. Clone this repository.
-2. Create a `.env` file similar to `.env.example` and set actual values. If you are using GitHub Enterprise Server, also include a `ENTERPRISE_HOSTNAME` variable and set the value to the name of your GitHub Enterprise Server instance.
+2. Create a `.env` file similar to `.env.example` and set actual values
 3. Install dependencies with `npm install`.
 4. Start the server with `npm run server`.
 5. Ensure your server is reachable from the internet.
@@ -23,16 +32,11 @@ This sample app showcases how webhooks can be used with a GitHub App's installat
 
 ## Usage
 
-With your server running, you can now create a pull request on any repository that
-your app can access. GitHub will emit a `pull_request.opened` event and will deliver
-the corresponding Webhook [payload](https://docs.github.com/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request) to your server.
-
-The server in this example listens for `pull_request.opened` events and acts on
-them by creating a comment on the pull request, with the message in `message.md`,
-using the [octokit.js rest methods](https://github.com/octokit/octokit.js#octokitrest-endpoint-methods).
+When running the server will [receive webhooks](https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request) on any repository that app has been granted access to.
+It will perform checks and post comments as defined in `app.js`
 
 ## Security considerations
-
+<!-- FIXME - Do this properly -->
 To keep things simple, this example reads the `GITHUB_APP_PRIVATE_KEY` from the
 environment. A more secure and recommended approach is to use a secrets management system
 like [Vault](https://www.vaultproject.io/use-cases/key-management), or one offered

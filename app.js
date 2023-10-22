@@ -4,6 +4,8 @@ import http from 'http'
 import { Octokit, App } from 'octokit'
 import { createNodeMiddleware } from '@octokit/webhooks'
 
+import { register_hooks_logging } from './src/print_webhooks.js'
+
 // Load environment variables from .env file
 dotenv.config()
 
@@ -33,6 +35,11 @@ const { data } = await app.octokit.request('/app')
 
 // Read more about custom logging: https://github.com/octokit/core.js#logging
 app.octokit.log.debug(`Authenticated as '${data.name}'`)
+
+////////////////////////////////////
+// Register each of the PR checks //
+////////////////////////////////////
+register_hooks_logging(app)
 
 
 // Optional: Handle errors

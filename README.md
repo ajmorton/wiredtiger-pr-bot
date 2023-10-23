@@ -27,6 +27,10 @@ Quality checks for WiredTiger PRs.
 Environment variables are currently stored in a local `.env` file that sits at the root dir of this repo.
 The file should contain the following fields:
 ```bash
+# Disable any Github API calls that would modify the PR. Read-only calls are still allowed
+# Only the value `true` will enable dry runs.
+DRY_RUN=true
+
 # The following settings are located on the Github App page where you have created the app. This will be located in `Settings/Developer Settings`.
 
 # Found under `About`

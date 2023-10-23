@@ -22,6 +22,12 @@ const privateKey = fs.readFileSync(privateKeyPath, 'utf8')
 const secret = process.env.WEBHOOK_SECRET
 const enterpriseHostname = process.env.ENTERPRISE_HOSTNAME
 
+if(process.env.DRY_RUN) {
+  console.log("=====================")
+  console.log(" Running in dry mode ")
+  console.log("=====================")
+}
+
 // Create an authenticated Octokit client authenticated as a GitHub App
 const app = new App({
   appId,

@@ -46,12 +46,16 @@ async function external_contributor_welcome_message(octokit, payload, pr_submitt
             and provide us with editor permissions on your branch. 
             Instructions on how do that can be found [here](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork).` 
 
-        await octokit.rest.issues.createComment({
-            owner: payload.repository.owner.login,
-            repo: payload.repository.name,
-            issue_number: payload.pull_request.number,
-            body: external_contributor_welcome_message
-        })
+        if(process.env.DRY_RUN === "true") {
+            console.log(`Dry run: posting comment\n${external_contributor_welcome_message}`)
+        } else {
+            await octokit.rest.issues.createComment({
+                owner: payload.repository.owner.login,
+                repo: payload.repository.name,
+                issue_number: payload.pull_request.number,
+                body: external_contributor_welcome_message
+            })
+        }
     } else {
         console.log("Not external contrib")
     }
@@ -63,18 +67,23 @@ async function create_contributors_agreement_reminder(octokit, payload, head_sha
     const org = payload.organization.login
     if(! await user_is_org_member(octokit, pr_submitter, org)) {
         console.log("Creating new contributors agreement check")
-        octokit.rest.checks.create({
-            owner: payload.repository.owner.login,
-            repo: payload.repository.name,
-            name: external_contributor_check_name,
-            output: {
-                title: "",
-                summary: `Make sure that an external contributor has signed the contributors agreement.
-                This check only appears for external constributors.
-                The contributors list can be [found here](${contributors_list_url})`,
-            },
-            conclusion: "neutral",
-            head_sha: head_sha,
-        })    
+        if(process.env.DRY_RUN === "true") {
+            console.log("Dry run: Adding 'please check contributors agreement' reminder")
+        } else {
+            octokit.rest.checks.create({
+                owner: payload.repository.owner.login,
+                repo: payload.repository.name,
+                name: external_contributor_check_name,
+                output: {
+                    title: "",
+                    summary: `Make sure that an external contributor has signed the contributors agreement.
+                    This check only appears for external constributors.
+                    The contributors list can be [found here](${contributors_list_url})`,
+                },
+                conclusion: "neutral",
+                head_sha: head_sha,
+            })
+        }
+    
     }
 }

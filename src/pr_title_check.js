@@ -29,35 +29,27 @@ async function run_pr_title_check(octokit, payload, head_sha) {
     const pr_title = await get_pr_title(octokit, payload)
     const conclusion = pr_title_regex.test(pr_title) ? 'success' : 'failure'
   
-    // This is a quick check. Just run it and create
-    // Usually for longer tasks we'd create it here and then execute it in the check_run.create hook
-    octokit.rest.checks.create({
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        name: pr_title_check_name,
-        output: {
-            title: "",
-            summary: `WiredTiger automation tools use PR titles and commit messages of the \
-            resulting merge commit (which is derived from the PR title) to update Jira tickets.
-            For this to work the commit and PR title must begin with the wiredtiger ticket number \
-            followed by a space.`,
-        },
-        head_sha: head_sha,
-        status: 'completed',
-        conclusion: conclusion,
-    })
-}
-
-// Helper func, get name of check run
-// FIXME - move into common file
-async function get_check_run_name(octokit, payload) {
-    const check_run_id = payload.check_run.id
-    const check_info = await octokit.rest.checks.get({
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        check_run_id: check_run_id,
-    });
-    return check_info.data.name
+    if(process.env.DRY_RUN === "true") {
+        console.log(`Dry run: Reporting pr_title check result: ${conclusion}`)
+    } else {
+        // This is a quick check. Just run it and create
+        // Usually for longer tasks we'd create it here and then execute it in the check_run.create hook
+        octokit.rest.checks.create({
+            owner: payload.repository.owner.login,
+            repo: payload.repository.name,
+            name: pr_title_check_name,
+            output: {
+                title: "",
+                summary: `WiredTiger automation tools use PR titles and commit messages of the \
+                resulting merge commit (which is derived from the PR title) to update Jira tickets.
+                For this to work the commit and PR title must begin with the wiredtiger ticket number \
+                followed by a space.`,
+            },
+            head_sha: head_sha,
+            status: 'completed',
+            conclusion: conclusion,
+        })    
+    }
 }
 
 async function get_pr_title(octokit, payload) {

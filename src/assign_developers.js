@@ -8,7 +8,7 @@ export function register_assign_developers_hooks(app) {
         const wt_ticket_regex = /(?<wt_ticket>WT-[0-9]+) .*/
         const match = payload.pull_request.title.match(wt_ticket_regex)
         if(!match) {
-            console.log("No WT ticket in title! skipping auto-assingment")
+            console.log("No WT ticket in title! skipping auto-assignment")
             return
         }
 
@@ -25,20 +25,26 @@ export function register_assign_developers_hooks(app) {
 
         console.log("Assigning members to PR")
 
-        // This call can only add org members and will silently skip non-members
-        await octokit.rest.issues.addAssignees({
-            owner: payload.repository.owner.login,
-            repo: payload.repository.name,
-            issue_number: payload.pull_request.number,
-            assignees: assignee_list
-        })
+        if(process.env.DRY_RUN === "true") {
+            console.log(`Dry run: assignee list: ${assignee_list}`)
+            console.log(`Dry run: PR message: \n"""\n${assignee_message}\n"""`)
+        } else {
+            // This call can only add org members and will silently skip non-members
+            await octokit.rest.issues.addAssignees({
+                owner: payload.repository.owner.login,
+                repo: payload.repository.name,
+                issue_number: payload.pull_request.number,
+                assignees: assignee_list
+            })
 
-        await octokit.rest.issues.createComment({
-            owner: payload.repository.owner.login,
-            repo: payload.repository.name,
-            issue_number: payload.pull_request.number,
-            body: assignee_message
-        })
+            await octokit.rest.issues.createComment({
+                owner: payload.repository.owner.login,
+                repo: payload.repository.name,
+                issue_number: payload.pull_request.number,
+                body: assignee_message
+            })
+        }
+
     })
 }
 

@@ -22,10 +22,27 @@ Quality checks for WiredTiger PRs.
     - Repo::Pull requests: Read & write
     - Organisation::Members: Read only
 
+## Env file
+
+Environment variables are currently stored in a local `.env` file that sits at the root dir of this repo.
+The file should contain the following fields:
+```bash
+# The following settings are located on the Github App page where you have created the app. This will be located in `Settings/Developer Settings`.
+
+# Found under `About`
+APP_ID="123"
+
+# Found under `Webhook secret`
+WEBHOOK_SECRET="secretstring"
+
+# .pem file created in the `Private keys` section. Download this file and provide its absolute file path
+PRIVATE_KEY_PATH="path/to/file.pem"
+```
+
 ## Setup
 
 1. Clone this repository.
-2. Create a `.env` file similar to `.env.example` and set actual values
+2. Create a `.env` as described in `Env file` and set values
 3. Install dependencies with `npm install`.
 4. Start the server with `npm run server`.
 5. Ensure your server is reachable from the internet.

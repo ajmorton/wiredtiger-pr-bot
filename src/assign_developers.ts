@@ -3,19 +3,24 @@
 // Note this doesn't mean they need to review, only that they're aware of the changes
 // SME groups members are tracked in wiredtiger/tools/pull_requests/sme_groups.json
 
-export function registerAssignDevelopersHooks(app) {
-    // Only run this on ticket creation.
-    // The component list should already have been set and finalised by the time the pr is opened
+import { PullRequestOpenedEvent } from "@octokit/webhooks-types";
+import { App, Octokit } from "octokit";
+
+export function registerAssignDevelopersHooks(app: App) {
+    // Only run this on PR creation.
+    // The component list on the Jira ticket should already have been set by the time the pr is opened.
     app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
         const wtTicketRegex = /(?<wtTicket>WT-[0-9]+) .*/;
         const match = payload.pull_request.title.match(wtTicketRegex);
-        if (!match) {
+
+        if (! match?.groups) {
             console.log('No WT ticket in title! skipping auto-assignment');
             return;
         }
 
-        const ticketComponents = await getComponentList(match.groups.wtTicket);
+        const ticketComponents = await getComponentList(match.groups["wtTicket"] as string);
         const assignedSmeGroups = await getAssignedSmeGroups(octokit, payload, ticketComponents);
+        // FIXME - change getAssignedSmeGroups to just getSmeGroups and filter here
 
         const assigneeList = buildAssigneeList(assignedSmeGroups);
         const assigneeMessage = buildAssigneeMessage(assignedSmeGroups, assigneeList);
@@ -27,7 +32,7 @@ export function registerAssignDevelopersHooks(app) {
 
         console.log('Assigning members to PR');
 
-        if (process.env.DRY_RUN === 'true') {
+        if (process.env["DRY_RUN"] === 'true') {
             console.log(`Dry run: assignee list: ${assigneeList}`);
             console.log(`Dry run: PR message: \n"""\n${assigneeMessage}\n"""`);
         } else {
@@ -50,32 +55,33 @@ export function registerAssignDevelopersHooks(app) {
 }
 
 // Return the list of components for a WT Jira ticket as a list of strings
-async function getComponentList(wtTicket) {
+async function getComponentList(wtTicket: string): Promise<string[]> {
     const wtTicketComponents = `https://jira.mongodb.org/rest/api/2/issue/${wtTicket}?fields=components`;
 
     const jiraTicketText = await fetch(wtTicketComponents).then((res) => res.text());
     const jiraTicketJson = JSON.parse(jiraTicketText);
-    return jiraTicketJson.fields.components.map((c) => c.name);
+    // FIXME - any type
+    return jiraTicketJson.fields.components.map((c: any) => c.name);
 }
 
 // Load the sme_groups.json file and return a mapping from
 // component to users for each component in `ticketComponents`.
-// Format:
-//     [{"component": str, "members": [str]}]
 // Example:
 //     [{"component": "Cache and eviction", "members": ["ajmorton", "user2"]}]
-async function getAssignedSmeGroups(octokit, payload, ticketComponents) {
+type SmeGroupList = { component: string; members: string[]; }[];
+async function getAssignedSmeGroups(octokit: Octokit, payload: PullRequestOpenedEvent, ticketComponents: string[]) : Promise<SmeGroupList> {
     const smeGroupsDownloadUrl = await octokit.rest.repos.getContent({
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
         path: 'tools/pull_requests/sme_groups.json',
-    }).then((res) => res.data.download_url);
+        // FIXME - any type
+    }).then((res: any) => res.data.download_url);
 
     const smeGroupsText = await fetch(smeGroupsDownloadUrl).then((res) => res.text());
     const smeGroupsJson = JSON.parse(smeGroupsText);
 
     const assignedSmeGroups = ticketComponents.map((component) => {
-        return {'component': component, 'members': smeGroupsJson[component]};
+        return {'component': component, 'members': smeGroupsJson[component] as string[]};
     });
 
     return assignedSmeGroups;
@@ -83,10 +89,11 @@ async function getAssignedSmeGroups(octokit, payload, ticketComponents) {
 
 // Given a list of assigned sme groups, get the list of all developers mentioned
 // and return as a list of strings
-function buildAssigneeList(assignedSmeGroups) {
-    let assigneeList = [];
+function buildAssigneeList(assignedSmeGroups: SmeGroupList): string[]{
+    let assigneeList: string[] = [];
     for (let i = 0; i < assignedSmeGroups.length; i++) {
-        assigneeList = assigneeList.concat(assignedSmeGroups[i]['members']);
+        const members = assignedSmeGroups[i]?.['members'] ??[];
+        assigneeList = assigneeList.concat(members);
     }
 
     // Cast to a Set and then back to array to remove duplicate entries
@@ -94,11 +101,14 @@ function buildAssigneeList(assignedSmeGroups) {
 }
 
 // Build the PR comment the bot will post. Explains which developers have been assigned and why
-function buildAssigneeMessage(smeGroups, assigneeList) {
+function buildAssigneeMessage(smeGroups: SmeGroupList, assigneeList: string[]) {
     let assigneeMessage = 'Assigning the following users based on Jira ticket components:\n';
 
     for (let i = 0; i < smeGroups.length; i++) {
-        assigneeMessage += `- \`${smeGroups[i].component}\`: ${smeGroups[i]['members'].join(', ')}\n`;
+        // FIXME - better error handling
+        const componentName: string = smeGroups[i]?.component ?? "missing component!";
+        const componentMembers: string = smeGroups[i]?.['members']?.join(', ') ?? "missing members!";
+        assigneeMessage += `- \`${componentName}\`: ${componentMembers}\n`;
     }
     assigneeMessage += '\n<sub>Assignees determined based on tools/pull_requests/sme_groups.json</sub>\n';
 

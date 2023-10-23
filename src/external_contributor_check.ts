@@ -3,26 +3,30 @@
 // - Add a PR check that reminds reviewers to check that the contributors agreement has been signed
 // - Send a slack message to the team that an external PR has been submitted. Encourage faster responses.
 
+import { PullRequestEvent, PullRequestOpenedEvent } from "@octokit/webhooks-types";
+import { App, Octokit } from "octokit";
+
 const externalContributorCheckName = 'External user. Please check contributors agreement';
 const contributorsListUrl = 'https://contributors.corp.mongodb.com/';
 
 // Set up actions to perform on each webhook
-export function registerExternalContributorCheckHooks(app) {
+export function registerExternalContributorCheckHooks(app: App) {
     app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
         // PR creation
-        const prPubmitter = payload.pull_request.user.login;
-        const org = payload.organization.login;
-        if (! await userIsOrgMember(octokit, prPubmitter, org)) {
-            await externalContributorWelcomeMessage(octokit, payload, prPubmitter);
+        const prSubmitter = payload.pull_request.user.login;
+        // FIXME - Add a logging webhook for server issues
+        const org = payload.organization?.login ?? "Can't find org!";
+        if (! await userIsOrgMember(octokit, prSubmitter, org)) {
+            await externalContributorWelcomeMessage(octokit, payload, prSubmitter);
             await createContributorsAgreementReminder(octokit, payload);
-            await notifySlackOfNewPr(octokit, payload, prPubmitter);
+            await notifySlackOfNewPr(payload, prSubmitter);
         }
     });
 
     app.webhooks.on('pull_request.synchronize', async ({octokit, payload}) => {
-        const prPubmitter = payload.pull_request.user.login;
-        const org = payload.organization.login;
-        if (! await userIsOrgMember(octokit, prPubmitter, org)) {
+        const prSubmitter = payload.pull_request.user.login;
+        const org = payload.organization?.login ?? "Can't find org!";
+        if (! await userIsOrgMember(octokit, prSubmitter, org)) {
             // Checks are tied to the latest commit on the PR, so we need to rerun
             // each time new commits are added.
             await createContributorsAgreementReminder(octokit, payload);
@@ -30,7 +34,7 @@ export function registerExternalContributorCheckHooks(app) {
     });
 }
 
-async function userIsOrgMember(octokit, user, org) {
+async function userIsOrgMember(octokit: Octokit, user: string, org: string): Promise<Boolean> {
     // This returns status 204 if the user is part of the organisation, 404 if they're not,
     // or 304 if the Github app isn't part of the organisation.
     // However if the Github app doesn't have read permissions for Organisation::Members it
@@ -41,19 +45,20 @@ async function userIsOrgMember(octokit, user, org) {
     }).then((result) => result.status).catch((result) => result.status);
     const inWtOrg = inWtOrgStatus == 204;
 
+    // FIXME - Add error logging
     return inWtOrg;
 }
 
 // If the PR submitter isn't a member of the WiredTiger org post a welcome message
-async function externalContributorWelcomeMessage(octokit, payload, prPubmitter) {
+async function externalContributorWelcomeMessage(octokit: Octokit, payload: PullRequestOpenedEvent, prSubmitter: string) {
     const externalContributorWelcomeMessage =
-        `Hi @${prPubmitter}, thank you for your submission!
+        `Hi @${prSubmitter}, thank you for your submission!
         Please make sure to sign our [Contributor Agreement](https://www.mongodb.com/legal/contributor-agreement) \
         and provide us with editor permissions on your branch. 
         Instructions on how do that can be found [here](https://docs.github.com/en/free-pro-team@latest/github/\
         collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork).`;
 
-    if (process.env.DRY_RUN === 'true') {
+    if (process.env["DRY_RUN"] === 'true') {
         console.log(`Dry run: posting comment\n${externalContributorWelcomeMessage}`);
     } else {
         await octokit.rest.issues.createComment({
@@ -67,9 +72,9 @@ async function externalContributorWelcomeMessage(octokit, payload, prPubmitter) 
 
 // Create a check that the external contributors agreement is signed.
 // This is only created for external users, for the obvious reasons
-async function createContributorsAgreementReminder(octokit, payload) {
+async function createContributorsAgreementReminder(octokit: Octokit, payload: PullRequestEvent) {
     console.log('Creating new contributors agreement check');
-    if (process.env.DRY_RUN === 'true') {
+    if (process.env["DRY_RUN"] === 'true') {
         console.log('Dry run: Adding \'please check contributors agreement\' reminder');
     } else {
         octokit.rest.checks.create({
@@ -91,7 +96,7 @@ async function createContributorsAgreementReminder(octokit, payload) {
 }
 
 // Send a message to slack about the new external PR asking for reviewers
-async function notifySlackOfNewPr(octokit, payload, prPubmitter) {
+async function notifySlackOfNewPr(payload: PullRequestOpenedEvent, prSubmitter: string) {
     const prUrl = payload.pull_request.url;
     const prTitle = payload.pull_request.title;
     const prNumber = payload.pull_request.number;
@@ -100,7 +105,7 @@ async function notifySlackOfNewPr(octokit, payload, prPubmitter) {
     // You can try it out here: https://app.slack.com/block-kit-builder/
     // (make sure to use the attachment preview and change the js string to a plain string)
     const slackMsgContent =
-        `External PR opened by \`${prPubmitter}\`!\n` +
+        `External PR opened by \`${prSubmitter}\`!\n` +
         `<${prUrl}|*#${prNumber} ${prTitle}*>\n` +
         `Please assign a reviewer or triage for a future sprint.\n` +
         `If the PR will be reviewed at a later date please inform the submitter of this decision.`;
@@ -114,11 +119,11 @@ async function notifySlackOfNewPr(octokit, payload, prPubmitter) {
     const slackMessageString = JSON.stringify(slackMessage);
 
     // Send the message to the slack webhook
-    if (process.env.DRY_RUN === 'true') {
+    if (process.env["DRY_RUN"] === 'true') {
         console.log(`Dry run: Sending slack message about new external PR:\n${slackMessageString}`);
     } else {
         console.log('Notifying slack of new external PR');
-        fetch(process.env.SLACK_WEBHOOK, {
+        fetch(process.env["SLACK_WEBHOOK"] as string, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: slackMessageString,

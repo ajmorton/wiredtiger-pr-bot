@@ -3,9 +3,12 @@
 // messages derived from this, for processing. For example the drop tool
 // uses this to update the correct Jira tickets
 
+import { PullRequestEvent } from "@octokit/webhooks-types";
+import { App, Octokit } from "octokit";
+
 const prTitleCheckName = 'PR title matches `WT-[0-9]+ .*`';
 
-export function registerPRTitleCheckHooks(app) {
+export function registerPRTitleCheckHooks(app: App) {
     // PR creation.
     app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
         runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
@@ -26,16 +29,16 @@ export function registerPRTitleCheckHooks(app) {
 }
 
 // Run the PR title check task. This verifies that the PR title begins with a wiredtiger ticket
-async function runPrTitleCheck(octokit, payload, headSha) {
+function runPrTitleCheck(octokit: Octokit, payload: PullRequestEvent, headSha: string) {
     const prTitleRegex = /WT-[0-9]+ .*/;
-    const prTitle = await getPrTitle(octokit, payload);
+    const prTitle = payload.pull_request.title;
     const conclusion = prTitleRegex.test(prTitle) ? 'success' : 'failure';
 
-    if (process.env.DRY_RUN === 'true') {
+    if (process.env["DRY_RUN"] === 'true') {
         console.log(`Dry run: Reporting pr_title check result: ${conclusion}`);
     } else {
-        // This is a quick check. Just run it and create
-        // Usually for longer tasks we'd create it here and then execute it in the check_run.create hook
+        // This is a quick check. Just run and and create it.
+        // Usually for longer tasks we'd create it here and then execute it in the check_run.created hook
         octokit.rest.checks.create({
             owner: payload.repository.owner.login,
             repo: payload.repository.name,
@@ -51,25 +54,5 @@ async function runPrTitleCheck(octokit, payload, headSha) {
             status: 'completed',
             conclusion: conclusion,
         });
-    }
-}
-
-async function getPrTitle(octokit, payload) {
-    if (payload.check_run) {
-        // FIXME - Multiple PRs can be returned here (see the [0]).
-        // Check runs are associated with a specific commit, and WiredTiger practices mean
-        // a commit will only ever be associated with a single pull request. (Backports use
-        // the newly merged commit from the prior release branch)
-        const prNumber = payload.check_run.check_suite.pull_requests[0].number;
-        const prInfo = await octokit.rest.pulls.get({
-            owner: payload.repository.owner.login,
-            repo: payload.repository.name,
-            pull_number: prNumber,
-        });
-        return prInfo.data.title;
-    } else if (payload.pull_request) {
-        return payload.pull_request.title;
-    } else {
-        throw new Error(`Can't find PR title for payload: ${payload}`);
     }
 }

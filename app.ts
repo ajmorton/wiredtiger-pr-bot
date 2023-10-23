@@ -4,25 +4,22 @@ import http from 'http';
 import {Octokit, App} from 'octokit';
 import {createNodeMiddleware} from '@octokit/webhooks';
 
-import {registerHooksLogging} from './src/print_webhooks.js';
-import {registerPRTitleCheckHooks} from './src/pr_title_check.js';
-import {registerExternalContributorCheckHooks} from './src/external_contributor_check.js';
-import {registerAssignDevelopersHooks} from './src/assign_developers.js';
-
-// FIXME - Update code to camelCase
-// FIXME - clean up all this async leakage
+import {registerHooksLogging} from './src/print_webhooks.ts';
+import {registerPRTitleCheckHooks} from './src/pr_title_check.ts';
+import {registerExternalContributorCheckHooks} from './src/external_contributor_check.ts';
+import {registerAssignDevelopersHooks} from './src/assign_developers.ts';
 
 // Load environment variables from .env file
 dotenv.config();
 
 // Set configured values
-const appId = process.env.APP_ID;
-const privateKeyPath = process.env.PRIVATE_KEY_PATH;
+const appId = process.env['APP_ID'] as string;
+const privateKeyPath = process.env['PRIVATE_KEY_PATH'] as string;
 const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
-const secret = process.env.WEBHOOK_SECRET;
-const enterpriseHostname = process.env.ENTERPRISE_HOSTNAME;
+const secret = process.env['WEBHOOK_SECRET'] as string;
+const enterpriseHostname = process.env['ENTERPRISE_HOSTNAME'] as string;
 
-if (process.env.DRY_RUN) {
+if (process.env['DRY_RUN']) {
     console.log('=====================');
     console.log(' Running in dry mode ');
     console.log('=====================');
@@ -53,11 +50,13 @@ registerAssignDevelopersHooks(app);
 // Optional: Handle errors
 app.webhooks.onError((error) => {
     if (error.name === 'AggregateError') {
-    // Log Secret verification errors
+        // Log Secret verification errors
         console.log(`Error processing request:`);
         console.log(error.event);
         console.log(`Response:`);
-        console.log(error.errors[0].response);
+        // FIXME - check what gets returned
+        // console.log(error.errors[0].response);
+        console.log(error.event.payload)
     } else {
         console.log(error);
     }
@@ -65,7 +64,7 @@ app.webhooks.onError((error) => {
 
 // Launch a web server to listen for GitHub webhooks
 // FIXME - Pick a less common port number
-const port = process.env.PORT || 3000;
+const port = process.env['PORT'] || 3000;
 const path = '/api/webhook';
 const localWebhookUrl = `http://localhost:${port}${path}`;
 

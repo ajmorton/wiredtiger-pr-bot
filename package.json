@@ -1,11 +1,10 @@
 {
-  "name": "starter_github_app",
+  "name": "wt_github_pr_checker",
   "private": true,
   "version": "0.0.1",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
-    "server": "node app.js",
-    "lint": "standard"
+    "server": "ts-node --esm app.ts"
   },
   "devDependencies": {
     "eslint": "^8.52.0",
@@ -16,6 +15,8 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
-    "octokit": "^2.0.14"
+    "octokit": "^2.0.14",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
   }
 }

@@ -4,7 +4,7 @@ const contributors_list_url = "https://contributors.corp.mongodb.com/";
 // Set up actions to perform on each webhook
 export function register_external_contributor_check_hooks(app) {
 
-    app.webhooks.on('pull_request.opened', async ({ octokit, payload }) => {
+    app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
         // PR creation
         const pr_submitter = payload.pull_request.user.login;
         const org = payload.organization.login;
@@ -15,7 +15,7 @@ export function register_external_contributor_check_hooks(app) {
         }
     });
 
-    app.webhooks.on('pull_request.synchronize', async ({ octokit, payload }) => {
+    app.webhooks.on('pull_request.synchronize', async ({octokit, payload}) => {
         const pr_submitter = payload.pull_request.user.login;
         const org = payload.organization.login;
         if (! await user_is_org_member(octokit, pr_submitter, org)) {
@@ -102,8 +102,8 @@ async function notify_slack_of_new_pr(octokit, payload, pr_submitter) {
     // Wrapping for the message to make slack happy. This adds a blue bar on 
     // the left hand side of the message
     const slack_message = 
-        { "attachments": [{ "color": "#2589CF", "blocks": 
-            [{ "type": "section", "text": {"type": "mrkdwn","text": slack_msg_content}}]
+        {"attachments": [{"color": "#2589CF", "blocks": 
+            [{"type": "section", "text": {"type": "mrkdwn","text": slack_msg_content}}]
         }]};
     const slack_message_string = JSON.stringify(slack_message);
 

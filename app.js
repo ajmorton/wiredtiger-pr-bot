@@ -1,13 +1,13 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import http from 'http';
-import { Octokit, App } from 'octokit';
-import { createNodeMiddleware } from '@octokit/webhooks';
+import {Octokit, App} from 'octokit';
+import {createNodeMiddleware} from '@octokit/webhooks';
 
-import { register_hooks_logging } from './src/print_webhooks.js';
-import { register_pr_title_check_hooks } from './src/pr_title_check.js';
-import { register_external_contributor_check_hooks} from './src/external_contributor_check.js';
-import { register_assign_developers_hooks} from './src/assign_developers.js';
+import {register_hooks_logging} from './src/print_webhooks.js';
+import {register_pr_title_check_hooks} from './src/pr_title_check.js';
+import {register_external_contributor_check_hooks} from './src/external_contributor_check.js';
+import {register_assign_developers_hooks} from './src/assign_developers.js';
 
 // FIXME - Update code to camelCase
 // FIXME - clean up all this async leakage
@@ -70,7 +70,7 @@ const path = '/api/webhook';
 const localWebhookUrl = `http://localhost:${port}${path}`;
 
 // See https://github.com/octokit/webhooks.js/#createnodemiddleware for all options
-const middleware = createNodeMiddleware(app.webhooks, { path });
+const middleware = createNodeMiddleware(app.webhooks, {path});
 
 http.createServer(middleware).listen(port, () => {
   console.log(`Server is listening for events at: ${localWebhookUrl}`);

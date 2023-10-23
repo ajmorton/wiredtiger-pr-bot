@@ -3,12 +3,12 @@ const pr_title_check_name = "PR title matches `WT-[0-9]+ .*`";
 export function register_pr_title_check_hooks(app) {
 
     // PR creation.
-    app.webhooks.on('pull_request.opened', async ({ octokit, payload }) => {
+    app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
         run_pr_title_check(octokit, payload, payload.pull_request.head.sha);
     });
   
     // When the PR details (title, description, etc), not the code, have changed.
-    app.webhooks.on('pull_request.edited', async ({ octokit, payload }) => {
+    app.webhooks.on('pull_request.edited', async ({octokit, payload}) => {
         // If the title hasn't changed there's no need to re-check it
         if(payload.changes.title) {
             run_pr_title_check(octokit, payload, payload.pull_request.head.sha);
@@ -16,7 +16,7 @@ export function register_pr_title_check_hooks(app) {
     });
   
     // On new commits to the PR rerun the check for the latest commit.
-    app.webhooks.on('pull_request.synchronize', async ({ octokit, payload }) => {
+    app.webhooks.on('pull_request.synchronize', async ({octokit, payload}) => {
         run_pr_title_check(octokit, payload, payload.pull_request.head.sha);
     });
 

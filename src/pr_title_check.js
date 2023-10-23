@@ -1,4 +1,4 @@
-const pr_title_check_name = "PR title matches `WT-[0-9]+ .*`";
+const pr_title_check_name = 'PR title matches `WT-[0-9]+ .*`';
 
 export function register_pr_title_check_hooks(app) {
     // PR creation.
@@ -26,7 +26,7 @@ async function run_pr_title_check(octokit, payload, head_sha) {
     const pr_title = await get_pr_title(octokit, payload);
     const conclusion = pr_title_regex.test(pr_title) ? 'success' : 'failure';
 
-    if (process.env.DRY_RUN === "true") {
+    if (process.env.DRY_RUN === 'true') {
         console.log(`Dry run: Reporting pr_title check result: ${conclusion}`);
     } else {
         // This is a quick check. Just run it and create
@@ -36,7 +36,7 @@ async function run_pr_title_check(octokit, payload, head_sha) {
             repo: payload.repository.name,
             name: pr_title_check_name,
             output: {
-                title: "",
+                title: '',
                 summary: `WiredTiger automation tools use PR titles and commit messages of the \
                 resulting merge commit (which is derived from the PR title) to update Jira tickets.
                 For this to work the commit and PR title must begin with the wiredtiger ticket number \

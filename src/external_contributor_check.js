@@ -1,5 +1,5 @@
-const external_contributor_check_name = "External user. Please check contributors agreement";
-const contributors_list_url = "https://contributors.corp.mongodb.com/";
+const external_contributor_check_name = 'External user. Please check contributors agreement';
+const contributors_list_url = 'https://contributors.corp.mongodb.com/';
 
 // Set up actions to perform on each webhook
 export function register_external_contributor_check_hooks(app) {
@@ -48,7 +48,7 @@ async function external_contributor_welcome_message(octokit, payload, pr_submitt
         Instructions on how do that can be found [here](https://docs.github.com/en/free-pro-team@latest/github/\
         collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork).`;
 
-    if (process.env.DRY_RUN === "true") {
+    if (process.env.DRY_RUN === 'true') {
         console.log(`Dry run: posting comment\n${external_contributor_welcome_message}`);
     } else {
         await octokit.rest.issues.createComment({
@@ -63,21 +63,21 @@ async function external_contributor_welcome_message(octokit, payload, pr_submitt
 // Create a check that the external contributors agreement is signed.
 // This is only created for external users, for the obvious reasons
 async function create_contributors_agreement_reminder(octokit, payload) {
-    console.log("Creating new contributors agreement check");
-    if (process.env.DRY_RUN === "true") {
-        console.log("Dry run: Adding 'please check contributors agreement' reminder");
+    console.log('Creating new contributors agreement check');
+    if (process.env.DRY_RUN === 'true') {
+        console.log('Dry run: Adding \'please check contributors agreement\' reminder');
     } else {
         octokit.rest.checks.create({
             owner: payload.repository.owner.login,
             repo: payload.repository.name,
             name: external_contributor_check_name,
             output: {
-                title: "",
+                title: '',
                 summary: `Make sure that an external contributor has signed the contributors agreement.
                 This check only appears for external constributors.
                 The contributors list can be [found here](${contributors_list_url})`,
             },
-            conclusion: "neutral",
+            conclusion: 'neutral',
             head_sha: payload.pull_request.head.sha,
         });
     }
@@ -101,19 +101,19 @@ async function notify_slack_of_new_pr(octokit, payload, pr_submitter) {
     // Wrapping for the message to make slack happy. This adds a blue bar on
     // the left hand side of the message
     const slack_message =
-        {"attachments": [{"color": "#2589CF", "blocks":
-            [{"type": "section", "text": {"type": "mrkdwn", "text": slack_msg_content}}]
+        {'attachments': [{'color': '#2589CF', 'blocks':
+            [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': slack_msg_content}}]
         }]};
     const slack_message_string = JSON.stringify(slack_message);
 
     // Send the message to the slack webhook
-    if (process.env.DRY_RUN === "true") {
+    if (process.env.DRY_RUN === 'true') {
         console.log(`Dry run: Sending slack message about new external PR:\n${slack_message_string}`);
     } else {
-        console.log("Notifying slack of new external PR");
+        console.log('Notifying slack of new external PR');
         fetch(process.env.SLACK_WEBHOOK, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
             body: slack_message_string
         });
     }

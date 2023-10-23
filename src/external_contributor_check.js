@@ -1,3 +1,8 @@
+// Handling for when external users submit a PR to wiredtiger.
+// - On PR creation we send a welcome message asking them to sign the contributors agreement
+// - Add a PR check that reminds reviewers to check that the contributors agreement has been signed
+// - Send a slack message to the team that an external PR has been submitted. Encourage faster responses.
+
 const externalContributorCheckName = 'External user. Please check contributors agreement';
 const contributorsListUrl = 'https://contributors.corp.mongodb.com/';
 

@@ -1,3 +1,7 @@
+// WiredTiger has SME groups who focus on certain areas of the codebase.
+// Whenever a PR touching this functionality is opened add those members to the PR as assignees.
+// Note this doesn't mean they need to review, only that they're aware of the changes
+// SME groups members are tracked in wiredtiger/tools/pull_requests/sme_groups.json
 
 export function registerAssignDevelopersHooks(app) {
     // Only run this on ticket creation.

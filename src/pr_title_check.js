@@ -1,3 +1,8 @@
+// Verify that PR titles always start with a WT ticket followed by a space.
+// Automation tools will use this PR title, as well as squash commit
+// messages derived from this, for processing. For example the drop tool
+// uses this to update the correct Jira tickets
+
 const prTitleCheckName = 'PR title matches `WT-[0-9]+ .*`';
 
 export function registerPRTitleCheckHooks(app) {

@@ -1,5 +1,5 @@
 // General logging when relevant hooks are received
-export function register_hooks_logging(app) {
+export function registerHooksLogging(app) {
     app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
         console.log(`Pull request open event for #${payload.pull_request.number}`);
     });

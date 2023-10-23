@@ -4,10 +4,10 @@ import http from 'http';
 import {Octokit, App} from 'octokit';
 import {createNodeMiddleware} from '@octokit/webhooks';
 
-import {register_hooks_logging} from './src/print_webhooks.js';
-import {register_pr_title_check_hooks} from './src/pr_title_check.js';
-import {register_external_contributor_check_hooks} from './src/external_contributor_check.js';
-import {register_assign_developers_hooks} from './src/assign_developers.js';
+import {registerHooksLogging} from './src/print_webhooks.js';
+import {registerPRTitleCheckHooks} from './src/pr_title_check.js';
+import {registerExternalContributorCheckHooks} from './src/external_contributor_check.js';
+import {registerAssignDevelopersHooks} from './src/assign_developers.js';
 
 // FIXME - Update code to camelCase
 // FIXME - clean up all this async leakage
@@ -45,10 +45,10 @@ const app = new App({
 // /////////////////////////////// //
 // Register each of the PR checks  //
 // /////////////////////////////// //
-register_hooks_logging(app);
-register_pr_title_check_hooks(app);
-register_external_contributor_check_hooks(app);
-register_assign_developers_hooks(app);
+registerHooksLogging(app);
+registerPRTitleCheckHooks(app);
+registerExternalContributorCheckHooks(app);
+registerAssignDevelopersHooks(app);
 
 // Optional: Handle errors
 app.webhooks.onError((error) => {

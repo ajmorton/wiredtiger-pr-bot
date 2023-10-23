@@ -31,6 +31,10 @@ The file should contain the following fields:
 # Only the value `true` will enable dry runs.
 DRY_RUN=true
 
+# The incoming Slack webhook (https://api.slack.com/messaging/webhooks) we send notification to. 
+# This posts slacks messages to a Slack channel for us 
+SLACK_WEBHOOK="https://hooks.slack.com/services/XXXXXX"
+
 # The following settings are located on the Github App page where you have created the app. This will be located in `Settings/Developer Settings`.
 
 # Found under `About`

@@ -1,5 +1,4 @@
 const pr_title_check_name = "PR title matches `WT-[0-9]+ .*`"
-const appId = process.env.APP_ID
 
 export function register_pr_title_check_hooks(app) {
 
@@ -19,19 +18,6 @@ export function register_pr_title_check_hooks(app) {
     // On new commits to the PR rerun the check for the latest commit.
     app.webhooks.on('pull_request.synchronize', async ({ octokit, payload }) => {
         run_pr_title_check(octokit, payload, payload.pull_request.head.sha)
-    })
-  
-
-    // FIXME - the retry all button is only for suites. Abandon the retry option?
-    //         should check_suite.rerequest just rerun all checks?
-    // Events that restart checks
-    app.webhooks.on('check_run.rerequested', async ({ octokit, payload }) => {
-        if (payload.check_run.app.id === appId) {
-            const check_run_name = await get_check_run_name(octokit, payload)
-            if(check_run_name === pr_title_check_name) {
-                run_pr_title_check(octokit, payload, payload.check_run.head_sha)
-            }
-        }
     })
 
 }

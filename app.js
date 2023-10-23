@@ -33,13 +33,13 @@ const app = new App({
     appId,
     privateKey,
     webhooks: {
-        secret
+        secret,
     },
     ...(enterpriseHostname && {
         Octokit: Octokit.defaults({
-            baseUrl: `https://${enterpriseHostname}/api/v3`
-        })
-    })
+            baseUrl: `https://${enterpriseHostname}/api/v3`,
+        }),
+    }),
 });
 
 // /////////////////////////////// //

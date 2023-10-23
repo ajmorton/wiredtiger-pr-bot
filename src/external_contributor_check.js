@@ -33,7 +33,7 @@ async function user_is_org_member(octokit, user, org) {
     const in_wt_org_status = await octokit.rest.orgs.checkMembershipForUser({
         org: org,
         username: user,
-    }).then(result => result.status).catch(result => result.status);
+    }).then((result) => result.status).catch((result) => result.status);
     const in_wt_org = in_wt_org_status == 204;
 
     return in_wt_org;
@@ -55,7 +55,7 @@ async function external_contributor_welcome_message(octokit, payload, pr_submitt
             owner: payload.repository.owner.login,
             repo: payload.repository.name,
             issue_number: payload.pull_request.number,
-            body: external_contributor_welcome_message
+            body: external_contributor_welcome_message,
         });
     }
 }
@@ -102,7 +102,7 @@ async function notify_slack_of_new_pr(octokit, payload, pr_submitter) {
     // the left hand side of the message
     const slack_message =
         {'attachments': [{'color': '#2589CF', 'blocks':
-            [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': slack_msg_content}}]
+            [{'type': 'section', 'text': {'type': 'mrkdwn', 'text': slack_msg_content}}],
         }]};
     const slack_message_string = JSON.stringify(slack_message);
 
@@ -114,7 +114,7 @@ async function notify_slack_of_new_pr(octokit, payload, pr_submitter) {
         fetch(process.env.SLACK_WEBHOOK, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: slack_message_string
+            body: slack_message_string,
         });
     }
 }

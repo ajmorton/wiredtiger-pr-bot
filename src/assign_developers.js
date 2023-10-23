@@ -32,14 +32,14 @@ export function register_assign_developers_hooks(app) {
                 owner: payload.repository.owner.login,
                 repo: payload.repository.name,
                 issue_number: payload.pull_request.number,
-                assignees: assignee_list
+                assignees: assignee_list,
             });
 
             await octokit.rest.issues.createComment({
                 owner: payload.repository.owner.login,
                 repo: payload.repository.name,
                 issue_number: payload.pull_request.number,
-                body: assignee_message
+                body: assignee_message,
             });
         }
     });
@@ -49,9 +49,9 @@ export function register_assign_developers_hooks(app) {
 async function get_component_list(wt_ticket) {
     const wt_ticket_components = `https://jira.mongodb.org/rest/api/2/issue/${wt_ticket}?fields=components`;
 
-    const jira_ticket_text = await fetch(wt_ticket_components).then(res => res.text());
+    const jira_ticket_text = await fetch(wt_ticket_components).then((res) => res.text());
     const jira_ticket_json = JSON.parse(jira_ticket_text);
-    return jira_ticket_json.fields.components.map(c => c.name);
+    return jira_ticket_json.fields.components.map((c) => c.name);
 }
 
 // Load the sme_groups.json file and return a mapping from
@@ -65,12 +65,12 @@ async function get_assigned_sme_groups(octokit, payload, ticket_components) {
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
         path: 'tools/pull_requests/sme_groups.json',
-    }).then(res => res.data.download_url);
+    }).then((res) => res.data.download_url);
 
-    const sme_groups_text = await fetch(sme_groups_download_url).then(res => res.text());
+    const sme_groups_text = await fetch(sme_groups_download_url).then((res) => res.text());
     const sme_groups_json = JSON.parse(sme_groups_text);
 
-    const assigned_sme_groups = ticket_components.map(component => {
+    const assigned_sme_groups = ticket_components.map((component) => {
         return {'component': component, 'members': sme_groups_json[component]};
     });
 
@@ -80,8 +80,8 @@ async function get_assigned_sme_groups(octokit, payload, ticket_components) {
 // Given a list of assigned sme groups, get the list of all developers mentioned
 // and return as a list of strings
 function build_assignee_list(assigned_sme_groups) {
-    var assignee_list = [];
-    for (var i = 0; i < assigned_sme_groups.length; i++) {
+    let assignee_list = [];
+    for (let i = 0; i < assigned_sme_groups.length; i++) {
         assignee_list = assignee_list.concat(assigned_sme_groups[i]['members']);
     }
 
@@ -91,9 +91,9 @@ function build_assignee_list(assigned_sme_groups) {
 
 // Build the PR comment the bot will post. Explains which developers have been assigned and why
 function build_assignee_message(sme_groups, assignee_list) {
-    var assignee_message = 'Assigning the following users based on Jira ticket components:\n';
+    let assignee_message = 'Assigning the following users based on Jira ticket components:\n';
 
-    for (var i = 0; i < sme_groups.length; i++) {
+    for (let i = 0; i < sme_groups.length; i++) {
         assignee_message += `- \`${sme_groups[i].component}\`: ${sme_groups[i]['members'].join(', ')}\n`;
     }
     assignee_message += '\n<sub>Assignees determined based on tools/pull_requests/sme_groups.json</sub>\n';

@@ -1,13 +1,11 @@
 
 export function register_assign_developers_hooks(app) {
-
-    // Only run this on ticket creation. 
+    // Only run this on ticket creation.
     // The component list should already have been set and finalised by the time the pr is opened
-    app.webhooks.on('pull_request.opened', async ({ octokit, payload }) => {
-
+    app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
         const wt_ticket_regex = /(?<wt_ticket>WT-[0-9]+) .*/;
         const match = payload.pull_request.title.match(wt_ticket_regex);
-        if(!match) {
+        if (!match) {
             console.log('No WT ticket in title! skipping auto-assignment');
             return;
         }
@@ -18,14 +16,14 @@ export function register_assign_developers_hooks(app) {
         const assignee_list = build_assignee_list(assigned_sme_groups);
         const assignee_message = build_assignee_message(assigned_sme_groups, assignee_list);
 
-        if(assignee_list.length == 0) {
+        if (assignee_list.length == 0) {
             console.log('No developers found to assign');
             return;
         }
 
         console.log('Assigning members to PR');
 
-        if(process.env.DRY_RUN === 'true') {
+        if (process.env.DRY_RUN === 'true') {
             console.log(`Dry run: assignee list: ${assignee_list}`);
             console.log(`Dry run: PR message: \n"""\n${assignee_message}\n"""`);
         } else {
@@ -44,7 +42,6 @@ export function register_assign_developers_hooks(app) {
                 body: assignee_message
             });
         }
-
     });
 }
 
@@ -57,7 +54,7 @@ async function get_component_list(wt_ticket) {
     return jira_ticket_json.fields.components.map(c => c.name);
 }
 
-// Load the sme_groups.json file and return a mapping from 
+// Load the sme_groups.json file and return a mapping from
 // component to users for each component in `ticket_components`.
 // Format:
 //     [{"component": str, "members": [str]}]
@@ -74,17 +71,17 @@ async function get_assigned_sme_groups(octokit, payload, ticket_components) {
     const sme_groups_json = JSON.parse(sme_groups_text);
 
     const assigned_sme_groups = ticket_components.map(component => {
-        return  { 'component': component, 'members': sme_groups_json[component] };
+        return {'component': component, 'members': sme_groups_json[component]};
     });
 
     return assigned_sme_groups;
 }
 
-// Given a list of assigned sme groups, get the list of all developers mentioned 
+// Given a list of assigned sme groups, get the list of all developers mentioned
 // and return as a list of strings
-function build_assignee_list(assigned_sme_groups){
+function build_assignee_list(assigned_sme_groups) {
     var assignee_list = [];
-    for(var i = 0; i < assigned_sme_groups.length; i++) {
+    for (var i = 0; i < assigned_sme_groups.length; i++) {
         assignee_list = assignee_list.concat(assigned_sme_groups[i]['members']);
     }
 
@@ -96,14 +93,14 @@ function build_assignee_list(assigned_sme_groups){
 function build_assignee_message(sme_groups, assignee_list) {
     var assignee_message = 'Assigning the following users based on Jira ticket components:\n';
 
-    for(var i = 0; i < sme_groups.length; i++) {
+    for (var i = 0; i < sme_groups.length; i++) {
         assignee_message += `- \`${sme_groups[i].component}\`: ${sme_groups[i]['members'].join(', ')}\n`;
     }
     assignee_message += '\n<sub>Assignees determined based on tools/pull_requests/sme_groups.json</sub>\n';
 
     // Github only supports up to 10 assignees. If our list exceeds this then github truncates it
-    if(assignee_list.length > 10) {
-        assignee_message += '<sub>Github limits PRs to at most 10. Assignee list has been truncated</sub>';    
+    if (assignee_list.length > 10) {
+        assignee_message += '<sub>Github limits PRs to at most 10. Assignee list has been truncated</sub>';
     }
 
     return assignee_message;

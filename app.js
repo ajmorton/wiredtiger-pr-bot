@@ -22,29 +22,29 @@ const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
 const secret = process.env.WEBHOOK_SECRET;
 const enterpriseHostname = process.env.ENTERPRISE_HOSTNAME;
 
-if(process.env.DRY_RUN) {
-  console.log("=====================");
-  console.log(" Running in dry mode ");
-  console.log("=====================");
+if (process.env.DRY_RUN) {
+    console.log("=====================");
+    console.log(" Running in dry mode ");
+    console.log("=====================");
 }
 
 // Create an authenticated Octokit client authenticated as a GitHub App
 const app = new App({
-  appId,
-  privateKey,
-  webhooks: {
-    secret
-  },
-  ...(enterpriseHostname && {
-    Octokit: Octokit.defaults({
-      baseUrl: `https://${enterpriseHostname}/api/v3`
+    appId,
+    privateKey,
+    webhooks: {
+        secret
+    },
+    ...(enterpriseHostname && {
+        Octokit: Octokit.defaults({
+            baseUrl: `https://${enterpriseHostname}/api/v3`
+        })
     })
-  })
 });
 
-////////////////////////////////////
-// Register each of the PR checks //
-////////////////////////////////////
+// /////////////////////////////// //
+// Register each of the PR checks  //
+// /////////////////////////////// //
 register_hooks_logging(app);
 register_pr_title_check_hooks(app);
 register_external_contributor_check_hooks(app);
@@ -52,15 +52,15 @@ register_assign_developers_hooks(app);
 
 // Optional: Handle errors
 app.webhooks.onError((error) => {
-  if (error.name === 'AggregateError') {
+    if (error.name === 'AggregateError') {
     // Log Secret verification errors
-    console.log(`Error processing request:`);
-    console.log(error.event);
-    console.log(`Response:`);
-    console.log(error.errors[0].response);
-  } else {
-    console.log(error);
-  }
+        console.log(`Error processing request:`);
+        console.log(error.event);
+        console.log(`Response:`);
+        console.log(error.errors[0].response);
+    } else {
+        console.log(error);
+    }
 });
 
 // Launch a web server to listen for GitHub webhooks
@@ -73,6 +73,6 @@ const localWebhookUrl = `http://localhost:${port}${path}`;
 const middleware = createNodeMiddleware(app.webhooks, {path});
 
 http.createServer(middleware).listen(port, () => {
-  console.log(`Server is listening for events at: ${localWebhookUrl}`);
-  console.log('Press Ctrl + C to quit.');
+    console.log(`Server is listening for events at: ${localWebhookUrl}`);
+    console.log('Press Ctrl + C to quit.');
 });

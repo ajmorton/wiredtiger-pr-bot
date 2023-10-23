@@ -77,6 +77,8 @@ async function createContributorsAgreementReminder(octokit, payload) {
                 This check only appears for external constributors.
                 The contributors list can be [found here](${contributorsListUrl})`,
             },
+            // FIXME - Right now we just post a reminder with neutral, but if we can parse the
+            //         contributors agreement this can become a pass/fail check
             conclusion: 'neutral',
             head_sha: payload.pull_request.head.sha,
         });

@@ -1,0 +1,4 @@
+# Except the directory other than this .gitignore and the README.md
+*
+!.gitignore
+!README.md

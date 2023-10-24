@@ -5,7 +5,7 @@
 
 import {type PullRequestEvent, type PullRequestOpenedEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
-import {slackMessageNotification} from './send_to_slack.ts';
+import {slackMessageNotification, slackMessageWarning} from './send_to_slack.ts';
 
 const externalContributorCheckName = 'External user. Please check contributors agreement';
 const contributorsListUrl = 'https://contributors.corp.mongodb.com/';
@@ -15,8 +15,12 @@ export function registerExternalContributorCheckHooks(app: App) {
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
 		// PR creation
 		const prSubmitter = payload.pull_request.user.login;
-		// FIXME - Add a logging webhook for server issues
-		const org = payload.organization?.login ?? 'Can\'t find org!';
+		const org = payload.organization?.login;
+		if (! org) {
+			slackMessageWarning('Warning! Couldn\'t extract organization from payload', JSON.stringify(payload));
+			return;
+		}
+
 		if (! await userIsOrgMember(octokit, prSubmitter, org)) {
 			await externalContributorWelcomeMessage(octokit, payload, prSubmitter);
 			await createContributorsAgreementReminder(octokit, payload);
@@ -46,7 +50,13 @@ async function userIsOrgMember(octokit: Octokit, user: string, org: string): Pro
 	}).then(result => result.status).catch(result => result.status as number);
 	const inWtOrg = inWtOrgStatus === 204;
 
-	// FIXME - Add error logging
+	if (inWtOrgStatus !== 204 && inWtOrgStatus !== 404) {
+		slackMessageWarning(
+			`Unexpected return status '${inWtOrgStatus}' from checkMembershipForUser()!\n` +
+			`Value should be 204 or 404. user = '${user}', org = '${org}'`,
+		);
+	}
+
 	return inWtOrg;
 }
 

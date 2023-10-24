@@ -109,9 +109,8 @@ function buildAssigneeMessage(smeGroups: SmeGroupList, assigneeList: string[]) {
 	let assigneeMessage = 'Assigning the following users based on Jira ticket components:\n';
 
 	for (const smeGroup of smeGroups) {
-		// FIXME - better error handling
-		const componentName: string = smeGroup?.component ?? 'missing component!';
-		const componentMembers: string = smeGroup?.members?.join(', ') ?? 'missing members!';
+		const componentName: string = smeGroup.component;
+		const componentMembers: string = smeGroup.members.join(', ');
 		assigneeMessage += `- \`${componentName}\`: ${componentMembers}\n`;
 	}
 

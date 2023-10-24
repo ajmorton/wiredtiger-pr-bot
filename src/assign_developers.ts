@@ -5,52 +5,57 @@
 
 import {type PullRequestOpenedEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
+import {reportWebhookError} from './print_webhooks';
 
 export function registerAssignDevelopersHooks(app: App) {
 	// Only run this on PR creation.
 	// The component list on the Jira ticket should already have been set by the time the pr is opened.
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
-		const wtTicketRegex = /(?<wtTicket>WT-[0-9]+) .*/;
-		const match = wtTicketRegex.exec(payload.pull_request.title);
+		try {
+			const wtTicketRegex = /(?<wtTicket>WT-[0-9]+) .*/;
+			const match = wtTicketRegex.exec(payload.pull_request.title);
 
-		if (! match?.groups) {
-			console.log('No WT ticket in title! skipping auto-assignment');
-			return;
-		}
+			if (! match?.groups) {
+				console.log('No WT ticket in title! skipping auto-assignment');
+				return;
+			}
 
-		const ticketComponents = await getComponentList(match.groups['wtTicket']!);
-		const assignedSmeGroups = await getAssignedSmeGroups(octokit, payload, ticketComponents);
+			const ticketComponents = await getComponentList(match.groups['wtTicket']!);
+			const assignedSmeGroups = await getAssignedSmeGroups(octokit, payload, ticketComponents);
 
-		const assigneeList = buildAssigneeList(assignedSmeGroups);
-		const assigneeMessage = buildAssigneeMessage(assignedSmeGroups, assigneeList);
+			const assigneeList = buildAssigneeList(assignedSmeGroups);
+			const assigneeMessage = buildAssigneeMessage(assignedSmeGroups, assigneeList);
 
-		if (assigneeList.length === 0) {
-			console.log('No developers found to assign');
-			return;
-		}
+			if (assigneeList.length === 0) {
+				console.log('No developers found to assign');
+				return;
+			}
 
-		console.log('Assigning members to PR');
+			console.log('Assigning members to PR');
 
-		if (process.env['DRY_RUN'] === 'true') {
-			console.log(`Dry run: assignee list: [${assigneeList.join(', ')}]`);
-			console.log(`Dry run: PR message: \n"""\n${assigneeMessage}\n"""`);
-		} else {
-			// This call can only add org members and will silently skip non-members
-			await octokit.rest.issues.addAssignees({
-				owner: payload.repository.owner.login,
-				repo: payload.repository.name,
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				issue_number: payload.pull_request.number,
-				assignees: assigneeList,
-			});
+			if (process.env['DRY_RUN'] === 'true') {
+				console.log(`Dry run: assignee list: [${assigneeList.join(', ')}]`);
+				console.log(`Dry run: PR message: \n"""\n${assigneeMessage}\n"""`);
+			} else {
+				// This call can only add org members and will silently skip non-members
+				await octokit.rest.issues.addAssignees({
+					owner: payload.repository.owner.login,
+					repo: payload.repository.name,
+					// eslint-disable-next-line @typescript-eslint/naming-convention
+					issue_number: payload.pull_request.number,
+					assignees: assigneeList,
+				});
 
-			await octokit.rest.issues.createComment({
-				owner: payload.repository.owner.login,
-				repo: payload.repository.name,
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				issue_number: payload.pull_request.number,
-				body: assigneeMessage,
-			});
+				await octokit.rest.issues.createComment({
+					owner: payload.repository.owner.login,
+					repo: payload.repository.name,
+					// eslint-disable-next-line @typescript-eslint/naming-convention
+					issue_number: payload.pull_request.number,
+					body: assigneeMessage,
+				});
+			}
+		} catch (error) {
+			reportWebhookError(error, payload);
 		}
 	});
 }

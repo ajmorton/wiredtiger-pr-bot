@@ -6,6 +6,7 @@
 import {type PullRequestEvent, type PullRequestOpenedEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
 import {slackMessageNotification, slackMessageWarning} from './send_to_slack.ts';
+import {reportWebhookError} from './print_webhooks.ts';
 
 const externalContributorCheckName = 'External user. Please check contributors agreement';
 const contributorsListUrl = 'https://contributors.corp.mongodb.com/';
@@ -13,28 +14,36 @@ const contributorsListUrl = 'https://contributors.corp.mongodb.com/';
 // Set up actions to perform on each webhook
 export function registerExternalContributorCheckHooks(app: App) {
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
-		// PR creation
-		const prSubmitter = payload.pull_request.user.login;
-		const org = payload.organization?.login;
-		if (! org) {
-			slackMessageWarning('Warning! Couldn\'t extract organization from payload', JSON.stringify(payload));
-			return;
-		}
+		try {
+			// PR creation
+			const prSubmitter = payload.pull_request.user.login;
+			const org = payload.organization?.login;
+			if (! org) {
+				slackMessageWarning('Warning! Couldn\'t extract organization from payload', JSON.stringify(payload));
+				return;
+			}
 
-		if (! await userIsOrgMember(octokit, prSubmitter, org)) {
-			await externalContributorWelcomeMessage(octokit, payload, prSubmitter);
-			await createContributorsAgreementReminder(octokit, payload);
-			await notifySlackOfNewPr(payload, prSubmitter);
+			if (! await userIsOrgMember(octokit, prSubmitter, org)) {
+				await externalContributorWelcomeMessage(octokit, payload, prSubmitter);
+				await createContributorsAgreementReminder(octokit, payload);
+				await notifySlackOfNewPr(payload, prSubmitter);
+			}
+		} catch (error) {
+			reportWebhookError(error, payload);
 		}
 	});
 
 	app.webhooks.on('pull_request.synchronize', async ({octokit, payload}) => {
-		const prSubmitter = payload.pull_request.user.login;
-		const org = payload.organization?.login ?? 'Can\'t find org!';
-		if (! await userIsOrgMember(octokit, prSubmitter, org)) {
-			// Checks are tied to the latest commit on the PR, so we need to rerun
-			// each time new commits are added.
-			await createContributorsAgreementReminder(octokit, payload);
+		try {
+			const prSubmitter = payload.pull_request.user.login;
+			const org = payload.organization?.login ?? 'Can\'t find org!';
+			if (! await userIsOrgMember(octokit, prSubmitter, org)) {
+				// Checks are tied to the latest commit on the PR, so we need to rerun
+				// each time new commits are added.
+				await createContributorsAgreementReminder(octokit, payload);
+			}
+		} catch (error) {
+			reportWebhookError(error, payload);
 		}
 	});
 }

@@ -48,21 +48,6 @@ registerPrTitleCheckHooks(app);
 registerExternalContributorCheckHooks(app);
 registerAssignDevelopersHooks(app);
 
-// Optional: Handle errors
-app.webhooks.onError(error => {
-	if (error.name === 'AggregateError') {
-		// Log Secret verification errors
-		console.log('Error processing request:');
-		console.log(error.event);
-		console.log('Response:');
-		// FIXME - check what gets returned
-		// console.log(error.errors[0].response);
-		console.log(error.event.payload);
-	} else {
-		console.log(error);
-	}
-});
-
 // Launch a web server to listen for GitHub webhooks
 // FIXME - Pick a less common port number
 const port = process.env['PORT'] ?? 3000;

@@ -5,26 +5,39 @@
 
 import {type PullRequestEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
+import {reportWebhookError} from './print_webhooks';
 
 const prTitleCheckName = 'PR title matches `WT-[0-9]+ .*`';
 
 export function registerPrTitleCheckHooks(app: App) {
 	// PR creation.
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
-		runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
+		try {
+			runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
+		} catch (error) {
+			reportWebhookError(error, payload);
+		}
 	});
 
 	// When the PR details (title, description, etc), not the code, have changed.
 	app.webhooks.on('pull_request.edited', async ({octokit, payload}) => {
-		// If the title hasn't changed there's no need to re-check it
-		if (payload.changes.title) {
-			runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
+		try {
+			// If the title hasn't changed there's no need to re-check it
+			if (payload.changes.title) {
+				runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
+			}
+		} catch (error) {
+			reportWebhookError(error, payload);
 		}
 	});
 
 	// On new commits to the PR rerun the check for the latest commit.
 	app.webhooks.on('pull_request.synchronize', async ({octokit, payload}) => {
-		runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
+		try {
+			runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
+		} catch (error) {
+			reportWebhookError(error, payload);
+		}
 	});
 }
 

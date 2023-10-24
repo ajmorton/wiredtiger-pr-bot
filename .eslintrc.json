@@ -1,16 +1,23 @@
 {
     "env": {
         "browser": true,
+        "commonjs": true,
         "es2021": true
     },
-    "extends": "google",
+    "extends": "xo",
+    "overrides": [
+        {
+            "extends": ["xo-typescript"],
+            "files": ["*.ts", "*.tsx"]
+        }
+    ],
     "parserOptions": {
-        "ecmaVersion": "latest",
-        "sourceType": "module"
+        "ecmaVersion": "latest"
     },
     "rules": {
-        "max-len": [1, 120],
-        "require-jsdoc": [0],
-        "indent": [2, 4]
+        // Allow a space between ! and its expression. e.g. if(! is_true) {}
+        "space-unary-ops": [1, {"overrides": {"!": true}}],
+        "operator-linebreak": [1, "after"],
+        "@typescript-eslint/no-floating-promises": [1, {"ignoreVoid": true}]
     }
 }

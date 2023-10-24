@@ -5,8 +5,8 @@
 
 import {type PullRequestEvent, type PullRequestOpenedEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
-import {slackMessageNotification, slackMessageWarning} from './send_to_slack.ts';
-import {reportWebhookError} from './print_webhooks.ts';
+import {slackMessageNotification, slackMessageWarning} from './notifySlack.ts';
+import {reportWebhookError} from './webhookLogging.ts';
 
 const externalContributorCheckName = 'External user. Please check contributors agreement';
 const contributorsListUrl = 'https://contributors.corp.mongodb.com/';

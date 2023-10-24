@@ -2,7 +2,7 @@
 
 import {type App} from 'octokit';
 import {type Schema} from '@octokit/webhooks-types';
-import {slackMessageError} from './send_to_slack';
+import {slackMessageError} from './notifySlack';
 
 export function registerHooksLogging(app: App) {
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {

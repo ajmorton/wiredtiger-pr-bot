@@ -4,10 +4,10 @@ import http from 'http';
 import {Octokit, App} from 'octokit';
 import {createNodeMiddleware} from '@octokit/webhooks';
 
-import {registerHooksLogging} from './src/print_webhooks.ts';
-import {registerPrTitleCheckHooks} from './src/pr_title_check.ts';
-import {registerExternalContributorCheckHooks} from './src/external_contributor_check.ts';
-import {registerAssignDevelopersHooks} from './src/assign_developers.ts';
+import {registerHooksLogging} from './src/webhookLogging.ts';
+import {registerPrTitleCheckHooks} from './src/prTitleValidation.ts';
+import {registerExternalContributorCheckHooks} from './src/externalContributorChecks.ts';
+import {registerAssignDevelopersHooks} from './src/assignDevelopers.ts';
 
 // Load environment variables from .env file
 dotenv.config();

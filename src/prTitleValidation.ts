@@ -5,7 +5,7 @@
 
 import {type PullRequestEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
-import {reportWebhookError} from './print_webhooks';
+import {reportWebhookError} from './webhookLogging';
 
 const prTitleCheckName = 'PR title matches `WT-[0-9]+ .*`';
 

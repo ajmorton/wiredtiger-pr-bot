@@ -5,7 +5,7 @@
 
 import {type PullRequestOpenedEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
-import {reportWebhookError} from './print_webhooks';
+import {reportWebhookError} from './webhookLogging';
 
 export function registerAssignDevelopersHooks(app: App) {
 	// Only run this on PR creation.

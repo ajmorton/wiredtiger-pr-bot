@@ -20,7 +20,6 @@ export function registerAssignDevelopersHooks(app: App) {
 
 		const ticketComponents = await getComponentList(match.groups['wtTicket']!);
 		const assignedSmeGroups = await getAssignedSmeGroups(octokit, payload, ticketComponents);
-		// FIXME - change getAssignedSmeGroups to just getSmeGroups and filter here
 
 		const assigneeList = buildAssigneeList(assignedSmeGroups);
 		const assigneeMessage = buildAssigneeMessage(assignedSmeGroups, assigneeList);
@@ -72,7 +71,8 @@ async function getComponentList(wtTicket: string): Promise<string[]> {
 // component to users for each component in `ticketComponents`.
 // Example:
 //     [{"component": "Cache and eviction", "members": ["ajmorton", "user2"]}]
-type SmeGroupList = Array<{component: string; members: string[]}>;
+type SmeGroup = {component: string; members: string[]};
+type SmeGroupList = SmeGroup[];
 async function getAssignedSmeGroups(octokit: Octokit, payload: PullRequestOpenedEvent, ticketComponents: string[]): Promise<SmeGroupList> {
 	const smeGroupsDownloadUrl: string = await octokit.rest.repos.getContent({
 		owner: payload.repository.owner.login,

@@ -5,6 +5,7 @@
 
 import {type PullRequestEvent, type PullRequestOpenedEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
+import {slackMessageNotification} from './send_to_slack.ts';
 
 const externalContributorCheckName = 'External user. Please check contributors agreement';
 const contributorsListUrl = 'https://contributors.corp.mongodb.com/';
@@ -112,23 +113,5 @@ async function notifySlackOfNewPr(payload: PullRequestOpenedEvent, prSubmitter: 
         'Please assign a reviewer or triage for a future sprint.\n' +
         'If the PR will be reviewed at a later date please inform the submitter of this decision.';
 
-	// Wrapping for the message to make slack happy. This adds a blue bar on
-	// the left hand side of the message
-	const slackMessage =
-        {attachments: [{color: '#2589CF', blocks:
-            [{type: 'section', text: {type: 'mrkdwn', text: slackMsgContent}}],
-        }]};
-	const slackMessageString = JSON.stringify(slackMessage);
-
-	// Send the message to the slack webhook
-	if (process.env['DRY_RUN'] === 'true') {
-		console.log(`Dry run: Sending slack message about new external PR:\n${slackMessageString}`);
-	} else {
-		console.log('Notifying slack of new external PR');
-		void fetch(process.env['SLACK_WEBHOOK']!, {
-			method: 'POST',
-			headers: {'Content-Type': 'application/json'},
-			body: slackMessageString,
-		});
-	}
+	slackMessageNotification(slackMsgContent);
 }

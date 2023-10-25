@@ -55,7 +55,7 @@ export function registerAssignDevelopersHooks(app: App) {
 				});
 			}
 		} catch (error) {
-			reportWebhookError(error, payload);
+			reportWebhookError(error, payload, 'assignDevelopers pull_request.opened');
 		}
 	});
 }

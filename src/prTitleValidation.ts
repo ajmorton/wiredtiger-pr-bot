@@ -15,7 +15,7 @@ export function registerPrTitleCheckHooks(app: App) {
 		try {
 			runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
 		} catch (error) {
-			reportWebhookError(error, payload);
+			reportWebhookError(error, payload, 'prTitleValidation pull_request.opened');
 		}
 	});
 
@@ -27,7 +27,7 @@ export function registerPrTitleCheckHooks(app: App) {
 				runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
 			}
 		} catch (error) {
-			reportWebhookError(error, payload);
+			reportWebhookError(error, payload, 'prTitleValidation pull_request.edited');
 		}
 	});
 
@@ -36,7 +36,7 @@ export function registerPrTitleCheckHooks(app: App) {
 		try {
 			runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
 		} catch (error) {
-			reportWebhookError(error, payload);
+			reportWebhookError(error, payload, 'prTitleValidation pull_request.synchronize');
 		}
 	});
 }

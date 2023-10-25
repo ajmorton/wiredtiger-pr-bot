@@ -30,7 +30,7 @@ export function registerExternalContributorCheckHooks(app: App) {
 				await notifySlackOfNewPr(payload, prSubmitter);
 			}
 		} catch (error) {
-			reportWebhookError(error, payload);
+			reportWebhookError(error, payload, 'externalContributorChecks pull_request.opened');
 		}
 	});
 
@@ -44,7 +44,7 @@ export function registerExternalContributorCheckHooks(app: App) {
 				await createContributorsAgreementReminder(octokit, payload);
 			}
 		} catch (error) {
-			reportWebhookError(error, payload);
+			reportWebhookError(error, payload, 'externalContributorChecks pull_request.synchronize');
 		}
 	});
 }

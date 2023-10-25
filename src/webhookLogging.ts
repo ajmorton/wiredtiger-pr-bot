@@ -20,9 +20,9 @@ export function registerHooksLogging(app: App) {
 
 // Helper function. When we catch an error in any of our hooks call this
 // to provide a summary to the Slack debug channel.
-export function reportWebhookError(error: unknown, payload: Schema) {
+export function reportWebhookError(error: unknown, payload: Schema, webhook: string) {
 	slackMessageError(
-		'Unexpected error when handling `pull_request.opened` event!\n' +
+		`Unexpected error when handling ${webhook} event!\n` +
 		'Error and payload:\n',
 		'Error:  \n=================\n' + JSON.stringify(error, null, 2) + '\n\n\n' +
 		'Payload:\n=================\n' + JSON.stringify(payload, null, 2));

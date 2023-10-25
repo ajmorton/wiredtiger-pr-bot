@@ -63,7 +63,8 @@ function runPrTitleCheck(octokit: Octokit, payload: PullRequestEvent, headSha: s
                 For this to work the commit and PR title must begin with the wiredtiger ticket number \
                 followed by a space.`,
 			},
-			headSha,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			head_sha: headSha,
 			status: 'completed',
 			conclusion,
 		});

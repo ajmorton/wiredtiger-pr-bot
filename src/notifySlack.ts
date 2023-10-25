@@ -87,11 +87,8 @@ function sendSlackMessage(message: string, color: string, slackWebhook: string, 
 		// 2800 to allow a buffer for our truncate message.
 	}
 
-	const slackMessage = wrapMessageInBlock(message, color, stack_trace);
-	const slackMessageString = JSON.stringify(slackMessage);
-
 	if (process.env['DRY_RUN'] === 'true') {
-		console.log(`Dry run: Sending slack message:\n${slackMessageString}\n`);
+		console.log(`Dry run: Sending slack message:\n${message}\n\n${stack_trace}`);
 	} else {
 		const slackMessage = wrapMessageInBlock(message, color, stack_trace);
 		const slackMessageString = JSON.stringify(slackMessage);

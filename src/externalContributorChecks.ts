@@ -19,7 +19,8 @@ export function registerExternalContributorCheckHooks(app: App) {
 			const prSubmitter = payload.pull_request.user.login;
 			const org = payload.organization?.login;
 			if (! org) {
-				slackMessageWarning('Warning! Couldn\'t extract organization from payload', JSON.stringify(payload));
+				slackMessageWarning('Warning! Couldn\'t extract organization from payload',
+					JSON.stringify(payload, null, 2));
 				return;
 			}
 

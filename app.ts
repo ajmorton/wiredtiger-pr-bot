@@ -8,6 +8,7 @@ import {registerHooksLogging} from './src/webhookLogging.ts';
 import {registerPrTitleCheckHooks} from './src/prTitleValidation.ts';
 import {registerExternalContributorCheckHooks} from './src/externalContributorChecks.ts';
 import {registerAssignDevelopersHooks} from './src/assignDevelopers.ts';
+import {slackMessageError} from './src/notifySlack.ts';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -60,4 +61,25 @@ const middleware = createNodeMiddleware(app.webhooks, {path});
 http.createServer(middleware).listen(port, () => {
 	console.log(`Server is listening for events at: ${localWebhookUrl}`);
 	console.log('Press Ctrl + C to quit.');
+});
+
+// This prevents the server from crashing when an error slips past the webhook
+// try-catch blocks. This will most likely happen when an octokit call returns a
+// 400 error since Promises wrapping an error will slip past the catch blocks.
+process.on('uncaughtException', err => {
+	// The stack traces don't help us much here. To find out which octokit call caused
+	// the error follow the link in data.documentation_error, get the title of the request,
+	// and look it up on https://docs.github.com/en/rest.
+	//
+	// For example:
+	// data.documentation_error:
+	//     'https://docs.github.com/rest/orgs/members#check-organization-membership-for-a-user'
+	// Request title:
+	//     'Check organization membership for a user'
+	// Function from https://docs.github.com/en/rest:
+	//    octokit.rest.orgs.checkMembershipForUser({org, username});
+	//
+	// You can then look at the contents of response.url to determine the string value of each
+	// argument provided to the function.
+	slackMessageError('Uncaught exception when responding to webhook! Details:', JSON.stringify(err, null, 2));
 });

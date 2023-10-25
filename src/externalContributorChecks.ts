@@ -73,11 +73,11 @@ async function userIsOrgMember(octokit: Octokit, user: string, org: string): Pro
 // If the PR submitter isn't a member of the WiredTiger org post a welcome message
 async function externalContributorWelcomeMessage(octokit: Octokit, payload: PullRequestOpenedEvent, prSubmitter: string) {
 	const externalContributorWelcomeMessage =
-        `Hi @${prSubmitter}, thank you for your submission!
-        Please make sure to sign our [Contributor Agreement](https://www.mongodb.com/legal/contributor-agreement) \
-        and provide us with editor permissions on your branch. 
-        Instructions on how do that can be found [here](https://docs.github.com/en/free-pro-team@latest/github/\
-        collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork).`;
+        `Hi @${prSubmitter}, thank you for your submission!\n` +
+        'Please make sure to sign our [Contributor Agreement](https://www.mongodb.com/legal/contributor-agreement) ' +
+        'and provide us with editor permissions on your branch. ' +
+        'Instructions on how do that can be found [here](https://docs.github.com/en/free-pro-team@latest/github/' +
+        'collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork).';
 
 	if (process.env['DRY_RUN'] === 'true') {
 		console.log(`Dry run: posting comment\n${externalContributorWelcomeMessage}`);

@@ -6,6 +6,7 @@
 import {type PullRequestOpenedEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
 import {reportWebhookError} from './webhookLogging';
+import {slackMessageWarning} from './notifySlack';
 
 export function registerAssignDevelopersHooks(app: App) {
 	// Only run this on PR creation.
@@ -69,6 +70,15 @@ async function getComponentList(wtTicket: string): Promise<string[]> {
 
 	const jiraTicketText = await fetch(wtTicketComponents).then(async res => res.text());
 	const jiraTicketJson = JSON.parse(jiraTicketText) as JsonComponentRequest;
+	if (! jiraTicketJson.fields) {
+		// Request failed to find the ticket or its component list.
+		slackMessageWarning(
+			`Couldn't find component list for ticket ${wtTicket}`,
+			`Failed GET request: ${wtTicketComponents}`,
+		);
+		return [];
+	}
+
 	return jiraTicketJson.fields.components.map(c => c.name);
 }
 

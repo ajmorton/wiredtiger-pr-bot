@@ -9,7 +9,7 @@ Quality checks for WiredTiger PRs.
 
 ## Requirements
 
-- Node.js 12 or higher
+- Node.js 19.8.1 or higher
 - A GitHub App with:
   - Subscriptions to the following events:
     - Pull Request

@@ -50,8 +50,8 @@ registerExternalContributorCheckHooks(app);
 registerAssignDevelopersHooks(app);
 
 // Launch a web server to listen for GitHub webhooks
-// FIXME - Pick a less common port number
-const port = process.env['PORT'] ?? 3000;
+// 8784 -> WT in ascii
+const port = process.env['PORT'] ?? 9080;
 const path = '/api/webhook';
 const localWebhookUrl = `http://localhost:${port}${path}`;
 

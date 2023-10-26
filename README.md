@@ -58,7 +58,9 @@ PRIVATE_KEY_PATH="path/to/file.pem"
 3. Install dependencies with `npm install`.
 4. Start the server with `npm run server`.
 5. Ensure your server is reachable from the internet.
-    - If you're using `smee`, run `smee -u <smee_url> -t http://localhost:3000/api/webhook`.
+    - For debugging and development [smee](https://smee.io/) is very useful as it provides a webpage interface that both displays webhook events and captures them for easy replay. This should **not** be used in production. 
+    To setup smee go to https://smee.io/ and create a new channel. Register this new channels URL's as your `Webhook URL` in the Github App settings, and then run `smee -u <smee_url> -t http://localhost:8784/api/webhook` locally. This will forward webhook events to the server listening on localhost.
+    - Otherwise for production use just make sure the machine you're running on has the relevant port exposed to the internet. For AWS workstations the 9080 port is exposed. On https://spruce.mongodb.com/spawn/host get your machine's `DNS Name`, and then append your port number and `/api/webhook` to the string, adding it to `Webhook URL` in the Github App's configuration. For example `my-host.compute.amazonaws.com` will become `my-host.compute.amazonaws.com:9080/api/webhook`
 6. Ensure your GitHub App includes at least one repository on its installations.
 
 ## Usage

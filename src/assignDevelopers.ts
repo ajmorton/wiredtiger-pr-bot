@@ -13,6 +13,10 @@ export function registerAssignDevelopersHooks(app: App) {
 	// The component list on the Jira ticket should already have been set by the time the pr is opened.
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
 		try {
+			if (! verifyTargetIsDefaultBranch(payload)) {
+				return;
+			}
+
 			const wtTicketRegex = /(?<wtTicket>WT-[0-9]+) .*/;
 			const match = wtTicketRegex.exec(payload.pull_request.title);
 
@@ -59,6 +63,20 @@ export function registerAssignDevelopersHooks(app: App) {
 			reportWebhookError(error, payload, 'assignDevelopers pull_request.opened');
 		}
 	});
+}
+
+// Verify the pull request is merging into the projects default branch.
+function verifyTargetIsDefaultBranch(payload: PullRequestOpenedEvent): boolean {
+	const defaultBranch = payload.repository.default_branch;
+	const targetBranchWithRepo = payload.pull_request.base.label;
+	const targetBranch = targetBranchWithRepo.split(':')[1];
+
+	if (targetBranch !== defaultBranch) {
+		console.log(`assignDevelopers: PR target branch '${targetBranch}' is not default branch '${defaultBranch}'`);
+		return false;
+	}
+
+	return true;
 }
 
 // Return the list of components for a WT Jira ticket as a list of strings

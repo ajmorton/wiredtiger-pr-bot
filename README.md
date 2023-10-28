@@ -4,7 +4,7 @@ Quality checks for WiredTiger PRs.
 - When external users (those not in the wiredtiger organisation) open a PR post a welcome message with instructions on signing the collaborators agreement, and add a check that reminds reviewers to verify the agreement has been signed
 - Validate that the PR title begins with a WT ticket required by our automation tasks
 - When a PR is opened automatically assign developers (as assignees, not reviewers) based on the Jira ticket's listed components and the contents of `tools/pull_requests/sme_groups.json`
-
+ 
 <!-- FIXME - make sure that the sme_groups.json file is added to the repo if/when we migrate the tool to wiredtiger -->
 
 ## Requirements

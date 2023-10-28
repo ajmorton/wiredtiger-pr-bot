@@ -17,52 +17,40 @@ export function registerAssignDevelopersHooks(app: App) {
 				return;
 			}
 
-			const wtTicketRegex = /(?<wtTicket>WT-[0-9]+) .*/;
-			const match = wtTicketRegex.exec(payload.pull_request.title);
-
-			if (! match?.groups) {
-				console.log('No WT ticket in title! skipping auto-assignment');
-				return;
-			}
-
-			const ticketComponents = await getComponentList(match.groups['wtTicket']!);
-			const assignedSmeGroups = await getAssignedSmeGroups(octokit, payload, ticketComponents);
-
-			const assigneeList = buildAssigneeList(assignedSmeGroups);
-			const assigneeMessage = buildAssigneeMessage(assignedSmeGroups, assigneeList);
-
-			if (assigneeList.length === 0) {
-				console.log('No developers found to assign');
-				return;
-			}
-
-			console.log('Assigning members to PR');
-
-			if (process.env['DRY_RUN'] === 'true') {
-				console.log(`Dry run: assignee list: [${assigneeList.join(', ')}]`);
-				console.log(`Dry run: PR message: \n"""\n${assigneeMessage}\n"""`);
-			} else {
-				// This call can only add org members and will silently skip non-members
-				await octokit.rest.issues.addAssignees({
-					owner: payload.repository.owner.login,
-					repo: payload.repository.name,
-					// eslint-disable-next-line @typescript-eslint/naming-convention
-					issue_number: payload.pull_request.number,
-					assignees: assigneeList,
-				});
-
-				await octokit.rest.issues.createComment({
-					owner: payload.repository.owner.login,
-					repo: payload.repository.name,
-					// eslint-disable-next-line @typescript-eslint/naming-convention
-					issue_number: payload.pull_request.number,
-					body: assigneeMessage,
-				});
+			const listAndMessage = await buildAssigneeListAndMessage(octokit, payload);
+			if (listAndMessage !== undefined) {
+				const [assigneeList, assigneeMessage] = listAndMessage;
+				await assignDevelopers(octokit, payload, assigneeList, assigneeMessage);
 			}
 		} catch (error) {
 			reportWebhookError(error, payload, 'assignDevelopers pull_request.opened');
 		}
 	});
+}
+
+// Create the list of developers to assign to the PR as well as the message explaining why.
+// If this is not possible return undefined.
+async function buildAssigneeListAndMessage(octokit: Octokit, payload: PullRequestOpenedEvent): Promise<[string[], string] | undefined> {
+	const wtTicketRegex = /(?<wtTicket>WT-[0-9]+) .*/;
+	const match = wtTicketRegex.exec(payload.pull_request.title);
+
+	if (! match?.groups) {
+		console.log('No WT ticket in title! skipping auto-assignment');
+		return undefined;
+	}
+
+	const ticketComponents = await getComponentList(match.groups['wtTicket']!);
+	const assignedSmeGroups = await getAssignedSmeGroups(octokit, payload, ticketComponents);
+
+	const assigneeList = buildAssigneeList(assignedSmeGroups);
+	const assigneeMessage = buildAssigneeMessage(assignedSmeGroups, assigneeList);
+
+	if (assigneeList.length === 0) {
+		console.log('No developers found to assign');
+		return undefined;
+	}
+
+	return [assigneeList, assigneeMessage];
 }
 
 // Verify the pull request is merging into the projects default branch.
@@ -157,3 +145,29 @@ function buildAssigneeMessage(smeGroups: SmeGroupList, assigneeList: string[]) {
 	return assigneeMessage;
 }
 
+// Update the PR and post a message on why developers were assigned.
+async function assignDevelopers(octokit: Octokit, payload: PullRequestOpenedEvent, assigneeList: string[], assigneeMessage: string) {
+	console.log('Assigning members to PR');
+
+	if (process.env['DRY_RUN'] === 'true') {
+		console.log(`Dry run: assignee list: [${assigneeList.join(', ')}]`);
+		console.log(`Dry run: PR message: \n"""\n${assigneeMessage}\n"""`);
+	} else {
+		// This call can only add org members and will silently skip non-members
+		await octokit.rest.issues.addAssignees({
+			owner: payload.repository.owner.login,
+			repo: payload.repository.name,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			issue_number: payload.pull_request.number,
+			assignees: assigneeList,
+		});
+
+		await octokit.rest.issues.createComment({
+			owner: payload.repository.owner.login,
+			repo: payload.repository.name,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			issue_number: payload.pull_request.number,
+			body: assigneeMessage,
+		});
+	}
+}

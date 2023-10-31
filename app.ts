@@ -50,7 +50,7 @@ registerExternalContributorCheckHooks(app);
 registerAssignDevelopersHooks(app);
 
 // Launch a web server to listen for GitHub webhooks
-// 8784 -> WT in ascii
+// default to 9080 which is open on spawn hosts
 const port = process.env['PORT'] ?? 9080;
 const path = '/api/webhook';
 const localWebhookUrl = `http://localhost:${port}${path}`;

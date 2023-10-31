@@ -1,5 +1,5 @@
 {
-  "name": "wt_github_pr_checker",
+  "name": "wiredtiger_pr_bot",
   "private": true,
   "version": "0.0.1",
   "type": "commonjs",

@@ -1,4 +1,4 @@
-# wt-github-pr-checker
+# wiretiger-pr-bot
 
 Quality checks for WiredTiger PRs.
 - When external users (those not in the wiredtiger organisation) open a PR post a welcome message with instructions on signing the collaborators agreement, and add a check that reminds reviewers to verify the agreement has been signed

@@ -1,4 +1,4 @@
-# wiretiger-pr-bot
+# wiredtiger-pr-bot
 
 Quality checks for WiredTiger PRs.
 - When external users (those not in the wiredtiger organisation) open a PR post a welcome message with instructions on signing the collaborators agreement, and add a check that reminds reviewers to verify the agreement has been signed
@@ -78,3 +78,12 @@ by major cloud providers:
 [AWS Secrets Manager](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-secrets-manager/),
 [Google Secret Manager](https://cloud.google.com/nodejs/docs/reference/secret-manager/latest),
 etc.
+
+
+## Common errors
+
+**I don't see any incoming webhooks!**  
+Confirm in the Github App settings (`Permissions and events::Subscribe to events`) that the subscriptions listed in the [Requirements](#requirements) section above are enabled. 
+
+**I'm seeing `[@octokit/webhooks] onUnhandledRequest() is deprecated and will be removed in a future release of @octokit/webhooks` in the logs**  
+These can be ignored. These are messages from random machines on the internet and not Github Webhook events.

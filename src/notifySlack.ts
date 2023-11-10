@@ -22,6 +22,7 @@ export function slackMessageWarning(message: string, stack_trace?: string) {
 	sendSlackMessage(message, yellow, process.env['SLACK_WEBHOOK_DEBUG']!, stack_trace);
 }
 
+// Slack messages are structured using block. These capture different sections of the message
 type SlackBlock = {type: string; text: {type: string; text: string}};
 type SlackMessageFormatted = {
 	attachments: [{

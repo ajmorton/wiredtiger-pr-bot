@@ -94,6 +94,7 @@ function getAssignedSmeGroups(ticketComponents: string[]): SmeGroupsList | undef
 		return assignedSmeGroups;
 	}
 
+	console.log(`sme groups file ${smeGroupsFile} not found!`);
 	return undefined;
 }
 

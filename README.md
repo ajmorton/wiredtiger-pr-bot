@@ -68,6 +68,16 @@ PRIVATE_KEY_PATH="path/to/file.pem"
 2. Create a `.env` as described in `Env file` and set values
 3. Install dependencies with `npm install`.
 4. Start the server with `npm run server`.
+    - When running on a remote machine I prefer to run in `screen` and save logs. This allows you to disconnect from the machine and keep the server running. To do so
+    ```bash
+    screen -t wiredtiger-pr-bot                  # Start up a new screen
+    npm run server 2>&1 | tee pr-bot-traces.log  # Pipe both stdout and sterr to a log file. Traces are also printed to console by `tee`
+    # ctrl-A, ctrl-D detaches the screen and you can close the remote connection
+
+    # When coming back to the machine
+    screen -list                       # Displays all active screens. Find your wiredtiger-pr-bot screen (e.g. 616001.wiredtiger-pr-bot)
+    screen -x 616001.wiredtiger-pr-bot # Open the screen and continue where you left off
+    ```
 5. Ensure your server is reachable from the internet.
     - For debugging and development [smee](https://smee.io/) is very useful as it provides a webpage interface that both displays webhook events and captures them for easy replay. This should **not** be used in production. 
     To setup smee go to https://smee.io/ and create a new channel. Register this new channels URL's as your `Webhook URL` in the Github App settings, and then run `smee -u <smee_url> -t http://localhost:8784/api/webhook` locally. This will forward webhook events to the server listening on localhost.

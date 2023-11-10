@@ -8,6 +8,7 @@ import {type App, type Octokit} from 'octokit';
 import {reportWebhookError} from './webhookLogging';
 import {slackMessageWarning} from './notifySlack';
 import {existsSync, readFileSync} from 'fs';
+import {verifyTargetIsDefaultBranch, prTitleRegex} from './common';
 
 export function registerAssignDevelopersHooks(app: App) {
 	// Only run this on PR creation.
@@ -15,6 +16,7 @@ export function registerAssignDevelopersHooks(app: App) {
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
 		try {
 			if (! verifyTargetIsDefaultBranch(payload)) {
+				// Only auto-assign developers when merging to develop. Backports don't need this behaviour.
 				return;
 			}
 
@@ -32,8 +34,7 @@ export function registerAssignDevelopersHooks(app: App) {
 // Create the list of developers to assign to the PR as well as the message explaining why.
 // If this is not possible return undefined.
 async function buildAssigneeListAndMessage(octokit: Octokit, payload: PullRequestOpenedEvent): Promise<[string[], string] | undefined> {
-	const wtTicketRegex = /(?<wtTicket>WT-[0-9]+) .*/;
-	const match = wtTicketRegex.exec(payload.pull_request.title);
+	const match = prTitleRegex.exec(payload.pull_request.title);
 
 	if (! match?.groups) {
 		console.log('No WT ticket in title! skipping auto-assignment');
@@ -52,20 +53,6 @@ async function buildAssigneeListAndMessage(octokit: Octokit, payload: PullReques
 	}
 
 	return [assigneeList, assigneeMessage];
-}
-
-// Verify the pull request is merging into the projects default branch.
-function verifyTargetIsDefaultBranch(payload: PullRequestOpenedEvent): boolean {
-	const defaultBranch = payload.repository.default_branch;
-	const targetBranchWithRepo = payload.pull_request.base.label;
-	const targetBranch = targetBranchWithRepo.split(':')[1];
-
-	if (targetBranch !== defaultBranch) {
-		console.log(`assignDevelopers: PR target branch '${targetBranch}' is not default branch '${defaultBranch}'`);
-		return false;
-	}
-
-	return true;
 }
 
 // Return the list of components for a WT Jira ticket as a list of strings

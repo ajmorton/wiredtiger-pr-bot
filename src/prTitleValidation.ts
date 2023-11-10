@@ -6,13 +6,19 @@
 import {type PullRequestEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
 import {reportWebhookError} from './webhookLogging';
+import {prTitleRegex, prTitleRegexString, verifyTargetIsDefaultBranch} from './common';
 
-const prTitleCheckName = 'PR title matches `WT-[0-9]+ .*`';
+const prTitleCheckName = `PR title begins with WT ticket: '${prTitleRegexString}'`;
 
 export function registerPrTitleCheckHooks(app: App) {
 	// PR creation.
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
 		try {
+			if (! verifyTargetIsDefaultBranch(payload)) {
+				// Backports don't follow the normal PR title rules. Ignore them.
+				return;
+			}
+
 			runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
 		} catch (error) {
 			reportWebhookError(error, payload, 'prTitleValidation pull_request.opened');
@@ -22,6 +28,11 @@ export function registerPrTitleCheckHooks(app: App) {
 	// When the PR details (title, description, etc), not the code, have changed.
 	app.webhooks.on('pull_request.edited', async ({octokit, payload}) => {
 		try {
+			if (! verifyTargetIsDefaultBranch(payload)) {
+				// Backports don't follow the normal PR title rules. Ignore them.
+				return;
+			}
+
 			// If the title hasn't changed there's no need to re-check it
 			if (payload.changes.title) {
 				runPrTitleCheck(octokit, payload, payload.pull_request.head.sha);
@@ -43,7 +54,6 @@ export function registerPrTitleCheckHooks(app: App) {
 
 // Run the PR title check task. This verifies that the PR title begins with a wiredtiger ticket
 function runPrTitleCheck(octokit: Octokit, payload: PullRequestEvent, headSha: string) {
-	const prTitleRegex = /WT-[0-9]+ .*/;
 	const prTitle = payload.pull_request.title;
 	const conclusion = prTitleRegex.test(prTitle) ? 'success' : 'failure';
 

@@ -1,12 +1,13 @@
 // WiredTiger has SME groups who focus on certain areas of the codebase.
 // Whenever a PR touching this functionality is opened add those members to the PR as assignees.
 // Note this doesn't mean they need to review, only that they're aware of the changes
-// SME groups members are tracked in wiredtiger/tools/pull_requests/sme_groups.json
+// SME groups members are tracked in the file pointed to by `SME_GROUPS_FILE` in the .env file.
 
 import {type PullRequestOpenedEvent} from '@octokit/webhooks-types';
 import {type App, type Octokit} from 'octokit';
 import {reportWebhookError} from './webhookLogging';
 import {slackMessageWarning} from './notifySlack';
+import {existsSync, readFileSync} from 'fs';
 
 export function registerAssignDevelopersHooks(app: App) {
 	// Only run this on PR creation.
@@ -40,7 +41,7 @@ async function buildAssigneeListAndMessage(octokit: Octokit, payload: PullReques
 	}
 
 	const ticketComponents = await getComponentList(match.groups['wtTicket']!);
-	const assignedSmeGroups = await getAssignedSmeGroups(octokit, payload, ticketComponents);
+	const assignedSmeGroups = getAssignedSmeGroups(ticketComponents)!;
 
 	const assigneeList = buildAssigneeList(assignedSmeGroups);
 	const assigneeMessage = buildAssigneeMessage(assignedSmeGroups, assigneeList);
@@ -93,28 +94,25 @@ async function getComponentList(wtTicket: string): Promise<string[]> {
 // Example:
 //     [{"component": "Cache and eviction", "members": ["ajmorton", "user2"]}]
 type SmeGroup = {component: string; members: string[]};
-type SmeGroupList = SmeGroup[];
-async function getAssignedSmeGroups(octokit: Octokit, payload: PullRequestOpenedEvent, ticketComponents: string[]): Promise<SmeGroupList> {
-	const smeGroupsDownloadUrl: string = await octokit.rest.repos.getContent({
-		owner: payload.repository.owner.login,
-		repo: payload.repository.name,
-		path: 'tools/pull_requests/sme_groups.json',
-	}).then((res: any) => res.data.download_url as string);
+type SmeGroupsList = SmeGroup[];
 
-	const smeGroupsText: string = await fetch(smeGroupsDownloadUrl).then(async res => res.text());
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-	const smeGroupsJson = JSON.parse(smeGroupsText);
+function getAssignedSmeGroups(ticketComponents: string[]): SmeGroupsList | undefined {
+	const smeGroupsFile = process.env['SME_GROUPS_FILE']!;
+	if (existsSync(smeGroupsFile)) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const smeGroupsJson = JSON.parse(readFileSync(smeGroupsFile, 'utf8'));
+		const assignedSmeGroups = ticketComponents.map(component =>
+			({component, members: smeGroupsJson[component] as string[]}),
+		);
+		return assignedSmeGroups;
+	}
 
-	const assignedSmeGroups = ticketComponents.map(component =>
-		({component, members: smeGroupsJson[component] as string[]}),
-	);
-
-	return assignedSmeGroups;
+	return undefined;
 }
 
 // Given a list of assigned sme groups, get the list of all developers mentioned
 // and return as a list of strings
-function buildAssigneeList(assignedSmeGroups: SmeGroupList): string[] {
+function buildAssigneeList(assignedSmeGroups: SmeGroupsList): string[] {
 	let assigneeList: string[] = [];
 	for (const smeGroup of assignedSmeGroups) {
 		const members = smeGroup?.members ?? [];
@@ -126,7 +124,7 @@ function buildAssigneeList(assignedSmeGroups: SmeGroupList): string[] {
 }
 
 // Build the PR comment the bot will post. Explains which developers have been assigned and why
-function buildAssigneeMessage(smeGroups: SmeGroupList, assigneeList: string[]) {
+function buildAssigneeMessage(smeGroups: SmeGroupsList, assigneeList: string[]) {
 	let assigneeMessage = 'Assigning the following users based on Jira ticket components:\n';
 
 	for (const smeGroup of smeGroups) {
@@ -134,8 +132,6 @@ function buildAssigneeMessage(smeGroups: SmeGroupList, assigneeList: string[]) {
 		const componentMembers: string = smeGroup.members.join(', ');
 		assigneeMessage += `- \`${componentName}\`: ${componentMembers}\n`;
 	}
-
-	assigneeMessage += '\n<sub>Assignees determined based on tools/pull_requests/sme_groups.json</sub>\n';
 
 	// Github only supports up to 10 assignees. If our list exceeds this then github truncates it
 	if (assigneeList.length > 10) {

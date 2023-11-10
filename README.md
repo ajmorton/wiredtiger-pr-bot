@@ -3,7 +3,7 @@
 Quality checks for WiredTiger PRs.
 - When external users (those not in the wiredtiger organisation) open a PR post a welcome message with instructions on signing the collaborators agreement, and add a check that reminds reviewers to verify the agreement has been signed
 - Validate that the PR title begins with a WT ticket required by our automation tasks
-- When a PR is opened automatically assign developers (as assignees, not reviewers) based on the Jira ticket's listed components and the contents of `tools/pull_requests/sme_groups.json`
+- When a PR is opened automatically assign developers (as assignees, not reviewers) based on the Jira ticket's listed components and the contents of the SME_GROUPS_FILE whose path is provided in the .env file`
 
 <!-- FIXME - make sure that the sme_groups.json file is added to the repo if/when we migrate the tool to wiredtiger -->
 
@@ -38,6 +38,17 @@ SLACK_WEBHOOK_NOTIFY="https://hooks.slack.com/services/XXXXXX"
 # The Slack webhook (https://api.slack.com/messaging/webhooks) we send errors and warnings to. 
 # These are errors and warnings about the Github app itself and used to diagnosie issues in the app.
 SLACK_WEBHOOK_DEBUG="https://hooks.slack.com/services/XXXXXX"
+
+# Path to the sme_groups.json file.
+# This file is a json file that maps from component names (as a string) to a list of developers 
+# to assign to PRs that modify that component (as a list of strings). SME (Subject Matter Expert) 
+# groups are developers who have experience, or would like to build experience, in a WiredTiger component. 
+# These developers will be assigned to the PR when it is created if the PR has a WT ticket in the title 
+# based on the components field of the WT tickets Jira page.  
+# Note that assigned does not mean the developer must review the PR, just that they are aware of changes 
+# taking place in the component. 
+# An example file format can be found in example/example_sme_groups.json
+SME_GROUPS_PATH="path/to/sme_groups.json"
 
 # The following settings are located on the Github App page where you have created the app. This will be located in `Settings/Developer Settings`.
 

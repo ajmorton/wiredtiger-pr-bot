@@ -7,6 +7,7 @@ import {type PullRequestEvent, type PullRequestOpenedEvent} from '@octokit/webho
 import {type App, type Octokit} from 'octokit';
 import {slackMessageNotification, slackMessageWarning} from './notifySlack.ts';
 import {reportWebhookError} from './webhookLogging.ts';
+import {verifyTargetIsDefaultBranch} from './common.ts';
 
 const externalContributorCheckName = 'External user. Please check contributors agreement';
 const contributorsListUrl = 'https://contributors.corp.mongodb.com/';
@@ -15,6 +16,12 @@ const contributorsListUrl = 'https://contributors.corp.mongodb.com/';
 export function registerExternalContributorCheckHooks(app: App) {
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
 		try {
+			if (! verifyTargetIsDefaultBranch(payload)) {
+				// External PRs should only be on develop, with the exception of SEBB (Our backport bot)
+				// which doesn't need to be treated like an external contributor.
+				return;
+			}
+
 			// PR creation
 			const prSubmitter = payload.pull_request.user.login;
 			const org = payload.organization?.login;
@@ -36,6 +43,12 @@ export function registerExternalContributorCheckHooks(app: App) {
 
 	app.webhooks.on('pull_request.synchronize', async ({octokit, payload}) => {
 		try {
+			if (! verifyTargetIsDefaultBranch(payload)) {
+				// External PRs should only be on develop, with the exception of SEBB (Our backport bot)
+				// which doesn't need to be treated like an external contributor.
+				return;
+			}
+
 			const prSubmitter = payload.pull_request.user.login;
 			const org = payload.organization?.login ?? 'Can\'t find org!';
 			if (! await userIsOrgMember(octokit, prSubmitter, org)) {

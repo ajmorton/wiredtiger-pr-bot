@@ -133,7 +133,7 @@ async function createContributorsAgreementReminder(octokit: Octokit, payload: Pu
 
 // Send a message to slack about the new external PR asking for reviewers
 async function notifySlackOfNewPr(payload: PullRequestOpenedEvent, prSubmitter: string) {
-	const prUrl = payload.pull_request.url;
+	const prUrl = payload.pull_request.html_url;
 	const prTitle = payload.pull_request.title;
 	const prNumber = payload.pull_request.number;
 

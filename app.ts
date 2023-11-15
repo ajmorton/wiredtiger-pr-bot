@@ -8,7 +8,7 @@ import {registerHooksLogging} from './src/webhookLogging.ts';
 import {registerPrTitleCheckHooks} from './src/prTitleValidation.ts';
 import {registerExternalContributorCheckHooks} from './src/externalContributorChecks.ts';
 import {registerAssignDevelopersHooks} from './src/assignDevelopers.ts';
-import {slackMessageError} from './src/notifySlack.ts';
+import {slackMessageError, slackMessageWarning} from './src/notifySlack.ts';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -19,12 +19,6 @@ const privateKeyPath = process.env['PRIVATE_KEY_PATH']!;
 const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
 const secret = process.env['WEBHOOK_SECRET']!;
 const enterpriseHostname = process.env['ENTERPRISE_HOSTNAME']!;
-
-if (process.env['DRY_RUN']) {
-	console.log('=====================');
-	console.log(' Running in dry mode ');
-	console.log('=====================');
-}
 
 // Create an authenticated Octokit client authenticated as a GitHub App
 const app = new App({
@@ -61,6 +55,17 @@ const middleware = createNodeMiddleware(app.webhooks, {path});
 http.createServer(middleware).listen(port, () => {
 	console.log(`Server is listening for events at: ${localWebhookUrl}`);
 	console.log('Press Ctrl + C to quit.');
+	if (process.env['DRY_RUN'] === 'true') {
+		console.log('========================');
+		console.log(' Running in dry mode ');
+		console.log('========================');
+		slackMessageWarning('wiredtiger-pr-bot starting: Dry run mode.');
+	} else {
+		console.log('========================');
+		console.log(' Running in active mode ');
+		console.log('========================');
+		slackMessageWarning('wiredtiger-pr-bot starting: Active mode');
+	}
 });
 
 // This prevents the server from crashing when an error slips past the webhook

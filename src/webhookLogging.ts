@@ -1,21 +1,28 @@
 // General logging when relevant hooks are received.
 
 import {type App} from 'octokit';
-import {type Schema} from '@octokit/webhooks-types';
+import {type PullRequestEvent, type Schema} from '@octokit/webhooks-types';
 import {slackMessageError} from './notifySlack';
 
 export function registerHooksLogging(app: App) {
 	app.webhooks.on('pull_request.opened', async ({octokit, payload}) => {
-		console.log(`Pull request open event for #${payload.pull_request.number}`);
+		logPullRequestEvent(payload);
 	});
 
 	app.webhooks.on('pull_request.edited', async ({octokit, payload}) => {
-		console.log(`Pull request edited event for #${payload.pull_request.number}`);
+		logPullRequestEvent(payload);
 	});
 
 	app.webhooks.on('pull_request.synchronize', async ({octokit, payload}) => {
-		console.log(`Pull request sync event for #${payload.pull_request.number}`);
+		logPullRequestEvent(payload);
 	});
+}
+
+// Console log that a pull request even has occurred
+function logPullRequestEvent(payload: PullRequestEvent) {
+	const prNum = payload.pull_request.number;
+	const prTitle = payload.pull_request.title;
+	console.log(`Pull request ${payload.action} event for #${prNum}: ${prTitle}`);
 }
 
 // Helper function. When we catch an error in any of our hooks call this

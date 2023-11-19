@@ -8,7 +8,7 @@ import {type App, type Octokit} from 'octokit';
 import {reportWebhookError} from './webhookLogging';
 import {prTitleRegex, prTitleRegexString, verifyTargetIsDefaultBranch} from './common';
 
-const prTitleCheckName = `PR title begins with WT ticket: '${prTitleRegexString}'`;
+const prTitleCheckName = `PR title is an ASCII string. Non-revert PRs begin with a WT ticket: '${prTitleRegexString}'`;
 
 export function registerPrTitleCheckHooks(app: App) {
 	// PR creation.
@@ -52,10 +52,16 @@ export function registerPrTitleCheckHooks(app: App) {
 	});
 }
 
-// Run the PR title check task. This verifies that the PR title begins with a wiredtiger ticket
+// Run the PR title check task.
+// This verifies that the PR title begins with a wiredtiger ticket when the ticket is not a revert PR, and that only ASCII characters are used.
 function runPrTitleCheck(octokit: Octokit, payload: PullRequestEvent, headSha: string) {
 	const prTitle = payload.pull_request.title;
-	const conclusion = prTitleRegex.test(prTitle) ? 'success' : 'failure';
+	let validRegex = prTitleRegex.test(prTitle);
+	if (prTitle.startsWith('Revert')) {
+		validRegex = true;
+	}
+
+	const conclusion = validRegex && isAscii(prTitle) ? 'success' : 'failure';
 
 	if (process.env['DRY_RUN'] === 'true') {
 		console.log(`Dry run: Reporting pr_title check result: ${conclusion}`);
@@ -71,7 +77,8 @@ function runPrTitleCheck(octokit: Octokit, payload: PullRequestEvent, headSha: s
 				summary: `WiredTiger automation tools use PR titles and commit messages of the \
                 resulting merge commit (which is derived from the PR title) to update Jira tickets.
                 For this to work the commit and PR title must begin with the wiredtiger ticket number \
-                followed by a space.`,
+                followed by a space, and must use only ASCII characters. \
+				An exception to this rule is revert tickets which only need to meet the ASCII requirement.`,
 			},
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			head_sha: headSha,
@@ -79,4 +86,16 @@ function runPrTitleCheck(octokit: Octokit, payload: PullRequestEvent, headSha: s
 			conclusion,
 		});
 	}
+}
+
+// Check if string only contains ascii chars. They'll have an ordinal value between 0 and 127
+function isAscii(str: string): boolean {
+	for (let i = 0; i < str.length; i++) {
+		const charCode = str.charCodeAt(i);
+		if (charCode < 0 || charCode > 127) {
+			return false;
+		}
+	}
+
+	return true;
 }

@@ -3,8 +3,8 @@
 import {type PullRequestEvent} from '@octokit/webhooks-types';
 
 // PR titles must begin with a WT ticket. Provides a capture group to extract the ticket title.
-export const prTitleRegex = /(?<wtTicket>WT-[0-9]+) .*/;
-export const prTitleRegexString = 'WT-[0-9]+ .*';
+export const prTitleRegex = /^(?<wtTicket>WT-[0-9]+) .*/;
+export const prTitleRegexString = '^WT-[0-9]+ .*';
 
 // Verify a pull request is merging into the projects default branch.
 export function verifyTargetIsDefaultBranch(payload: PullRequestEvent): boolean {
